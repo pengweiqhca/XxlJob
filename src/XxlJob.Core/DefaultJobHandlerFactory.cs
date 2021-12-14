@@ -44,7 +44,7 @@ public class DefaultJobHandlerFactory : IJobHandlerFactory
 
         if (job is IDisposable) return new JobHandlerWrapper((IJobHandler)job);
 
-        if (job == null) job = ActivatorUtilities.CreateInstance(provider, jobHandler.JobType);
+        job ??= ActivatorUtilities.CreateInstance(provider, jobHandler.JobType);
 
         return (IJobHandler)job;
     }
