@@ -40,11 +40,19 @@ public static class ServiceCollectionExtensions
         return services;
     }
 
-    public static IServiceCollection AddJob<TJob>(this IServiceCollection services) where TJob : class, IJobHandler =>
-        services.Configure<JobHandlerOptions>(options => options.AddJob<TJob>());
+    public static IServiceCollection AddJob<TJob>(this IServiceCollection services) where TJob : class, IJobHandler
+    {
+        services.TryAddScoped<TJob>();
 
-    public static IServiceCollection AddJob<TJob>(this IServiceCollection services, string jobName) where TJob : class, IJobHandler =>
-        services.Configure<JobHandlerOptions>(options => options.AddJob<TJob>(jobName));
+        return services.Configure<JobHandlerOptions>(options => options.AddJob<TJob>());
+    }
+
+    public static IServiceCollection AddJob<TJob>(this IServiceCollection services, string jobName) where TJob : class, IJobHandler
+    {
+        services.TryAddScoped<TJob>();
+
+        return services.Configure<JobHandlerOptions>(options => options.AddJob<TJob>(jobName));
+    }
 
     public static IServiceCollection AddAutoRegistry(this IServiceCollection services)
     {

@@ -19,7 +19,7 @@ public class Startup
         services.AddXxlJobExecutor(Configuration);
         services.AddDefaultXxlJobHandlers();// add httpHandler;
 
-        services.AddSingleton<IJobHandler, DemoJobHandler>(); // 添加自定义的jobHandler
+        services.AddJob<DemoJobHandler>(); // 添加自定义的jobHandler
 
         services.AddAutoRegistry(); // 自动注册
     }
