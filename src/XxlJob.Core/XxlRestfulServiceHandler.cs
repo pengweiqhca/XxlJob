@@ -34,30 +34,22 @@ public class XxlRestfulServiceHandler
     {
         if (string.IsNullOrEmpty(method)) return false;
 
-        method = method.ToLower();
-
-        return method == "beat" || method == "idleBeat" || method == "run" || method == "kill" || method == "log";
+        return method.ToLower() is "beat" or "idleBeat" or "run" or "kill" or "log";
     }
 
     public async Task HandlerAsync(IXxlJobContext context, CancellationToken cancellationToken)
     {
         ReturnT? ret = null;
 
-        if (!string.IsNullOrEmpty(_options.AccessToken))
+        if (!string.IsNullOrEmpty(_options.AccessToken) &&
+            context.TryGetHeader("XXL-JOB-ACCESS-TOKEN", out var tokenValues) &&
+            _options.AccessToken != tokenValues.FirstOrDefault())
         {
-            var reqToken = "";
-            if (context.TryGetHeader("XXL-JOB-ACCESS-TOKEN", out var tokenValues))
-            {
-                reqToken = tokenValues[0];
-            }
-            if (_options.AccessToken != reqToken)
-            {
-                ret = ReturnT.Failed("ACCESS-TOKEN Auth Fail");
+            ret = ReturnT.Failed("ACCESS-TOKEN Auth Fail");
 
-                await context.WriteResponse(ret, cancellationToken).ConfigureAwait(false);
+            await context.WriteResponse(ret, cancellationToken).ConfigureAwait(false);
 
-                return;
-            }
+            return;
         }
 
         try

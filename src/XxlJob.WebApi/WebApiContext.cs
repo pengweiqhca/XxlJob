@@ -12,14 +12,9 @@ public class WebApiContext : IXxlJobContext
 
     public string Method => _response.RequestMessage.RequestUri.AbsolutePath.Split('/')[^1].ToLower();
 
-    public bool TryGetHeader(string headerName, out IReadOnlyList<string> headerValues)
+    public bool TryGetHeader(string headerName, out IEnumerable<string> headerValues)
     {
-        if (_response.RequestMessage.Headers.TryGetValues(headerName, out var values))
-        {
-            headerValues = values.ToArray();
-
-            return true;
-        }
+        if (_response.RequestMessage.Headers.TryGetValues(headerName, out headerValues)) return true;
 
         headerValues = Array.Empty<string>();
 

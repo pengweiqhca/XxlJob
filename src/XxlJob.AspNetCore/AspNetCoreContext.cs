@@ -13,7 +13,7 @@ public class AspNetCoreContext : IXxlJobContext
 
     public string Method => _context.Request.Path.Value?.Split('/')[^1].ToLower() ?? "";
 
-    public bool TryGetHeader(string headerName, out IReadOnlyList<string> headerValues)
+    public bool TryGetHeader(string headerName, out IEnumerable<string> headerValues)
     {
         if (_context.Request.Headers.TryGetValue(headerName, out var values))
         {

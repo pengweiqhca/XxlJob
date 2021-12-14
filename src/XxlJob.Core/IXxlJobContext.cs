@@ -6,7 +6,7 @@ public interface IXxlJobContext
 {
     string Method { get; }
 
-    bool TryGetHeader(string headerName, out IReadOnlyList<string> headerValues);
+    bool TryGetHeader(string headerName, out IEnumerable<string> headerValues);
 
     Task<T?> ReadRequest<T>(CancellationToken cancellationToken);
 
