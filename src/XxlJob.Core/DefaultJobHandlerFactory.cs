@@ -7,29 +7,13 @@ namespace XxlJob.Core;
 
 public class DefaultJobHandlerFactory : IJobHandlerFactory
 {
-    private readonly IServiceProvider _provider;
     private readonly JobHandlerOptions _options;
 
-    public DefaultJobHandlerFactory(IServiceProvider provider, IOptions<JobHandlerOptions> options)
+    public DefaultJobHandlerFactory(IOptions<JobHandlerOptions> options, IEnumerable<IJobHandler> jobHandlers)
     {
-        _provider = provider;
         _options = options.Value;
 
-        Initialize();
-    }
-
-    private void Initialize()
-    {
-        var list = _provider.GetServices<IJobHandler>().ToArray();
-        if (list == null || !list.Any())
-        {
-            throw new TypeLoadException("IJobHandlers are not found in IServiceCollection");
-        }
-
-        foreach (var handler in list)
-        {
-            _options.AddJob(handler);
-        }
+        foreach (var handler in jobHandlers) _options.AddJob(handler);
     }
 
     public IJobHandler? GetJobHandler(IServiceProvider provider, string handlerName)
