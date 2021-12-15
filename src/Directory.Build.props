@@ -11,12 +11,21 @@
     <Copyright>pengweiqhca @ 2021</Copyright>
     <Authors>pengweiqhca</Authors>
     <AssemblyTitle>XxlJobExecutor DotNet port</AssemblyTitle>
+    <DebugSymbols>True</DebugSymbols>
+    <Description>xxl-job的dotnet最新执行器实现，服务端支持XXL-JOB 2.2+，客户端支持asp.net、asp.net core、web api等。</Description>
+    <Deterministic>True</Deterministic>
+    <EmbedUntrackedSources>True</EmbedUntrackedSources>
+    <GenerateDocumentationFile>True</GenerateDocumentationFile>
+    <GeneratePackageOnBuild Condition="'$(Configuration)' == 'Release'">True</GeneratePackageOnBuild>
+    <NoWarn>$(NoWarn);CS1591;NU5104</NoWarn>
+    <IncludeSymbols>True</IncludeSymbols>
     <PackageTags>Hession,xxl-job,XxlJob</PackageTags>
     <PackageProjectUrl>https://github.com/pengweiqhca/XxlJob</PackageProjectUrl>
     <PackageLicense>https://github.com/pengweiqhca/XxlJob/blob/master/LICENSE</PackageLicense>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
     <RepositoryType>git</RepositoryType>
     <RepositoryUrl>https://github.com/pengweiqhca/XxlJob</RepositoryUrl>
+    <PublishRepositoryUrl>True</PublishRepositoryUrl>
   </PropertyGroup>
 
   <ItemGroup>
