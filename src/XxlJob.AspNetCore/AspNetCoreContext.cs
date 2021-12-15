@@ -9,9 +9,14 @@ public class AspNetCoreContext : IXxlJobContext
 {
     private readonly HttpContext _context;
 
-    public AspNetCoreContext(HttpContext context) => _context = context;
+    public AspNetCoreContext(HttpContext context, string? method)
+    {
+        _context = context;
 
-    public string Method => _context.Request.Path.Value?.Split('/')[^1].ToLower() ?? "";
+        Method = method ?? "";
+    }
+
+    public string Method { get; }
 
     public bool TryGetHeader(string headerName, out IEnumerable<string> headerValues)
     {

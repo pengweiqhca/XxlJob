@@ -1,11 +1,11 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <PackageId>XxlJob2.WebApi</PackageId>
     <TargetFramework>net461</TargetFramework>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="IndexRange" Version="1.*" />
     <PackageReference Include="Microsoft.AspNet.WebApi.Core" Version="5.2.7" />
 
     <ProjectReference Include="..\XxlJob.Core\XxlJob.Core.csproj" />

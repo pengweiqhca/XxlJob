@@ -9,9 +9,14 @@ public class AspNetContext : IXxlJobContext
 {
     private readonly HttpContext _context;
 
-    public AspNetContext(HttpContext context) => _context = context;
+    public AspNetContext(HttpContext context, string method)
+    {
+        _context = context;
 
-    public string Method => _context.Request.Path.Split('/')[^1].ToLower();
+        Method = method;
+    }
+
+    public string Method { get; }
 
     public bool TryGetHeader(string headerName, out IEnumerable<string> headerValues)
     {
@@ -35,6 +40,6 @@ public class AspNetContext : IXxlJobContext
     {
         _context.Response.ContentType = "application/json;charset=utf-8";
 
-        return new (JsonSerializer.SerializeAsync(_context.Response.OutputStream, ret, cancellationToken: cancellationToken));
+        return new(JsonSerializer.SerializeAsync(_context.Response.OutputStream, ret, cancellationToken: cancellationToken));
     }
 }

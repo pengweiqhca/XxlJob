@@ -8,9 +8,14 @@ public class WebApiContext : IXxlJobContext
 {
     private readonly HttpResponseMessage _response;
 
-    public WebApiContext(HttpResponseMessage response) => _response = response;
+    public WebApiContext(HttpResponseMessage response, string method)
+    {
+        _response = response;
 
-    public string Method => _response.RequestMessage.RequestUri.AbsolutePath.Split('/')[^1].ToLower();
+        Method = method;
+    }
+
+    public string Method { get; }
 
     public bool TryGetHeader(string headerName, out IEnumerable<string> headerValues)
     {

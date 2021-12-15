@@ -1,9 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using System.Web;
 using System.Web.Routing;
-using Microsoft.Extensions.Options;
 using XxlJob.Core;
-using XxlJob.Core.Config;
 
 namespace XxlJob.AspNet;
 
@@ -51,9 +49,16 @@ public static class RouteCollectionExtensions
 
         public IHttpHandler GetHttpHandler(RequestContext requestContext) => this;
 
-        public override Task ProcessRequestAsync(HttpContext context) =>
-            GetXxlRestfulServiceHandler(new HttpContextWrapper(context), _requestServices)
-                .HandlerAsync(new AspNetContext(context), context.Response.ClientDisconnectedToken);
+        public override async Task ProcessRequestAsync(HttpContext context)
+        {
+            var method = context.Request.RequestContext.RouteData.Values.TryGetValue("method:xxlJob", out var value) ? value?.ToString() : null;
+
+            using var cts = CancellationTokenSource.CreateLinkedTokenSource(context.Request.TimedOutToken, context.Response.ClientDisconnectedToken);
+
+            await GetXxlRestfulServiceHandler(context.Request.RequestContext.HttpContext, _requestServices)
+                .HandlerAsync(new AspNetContext(context, method ?? ""), cts.Token)
+                .ConfigureAwait(false);
+        }
     }
 
     private class XxlJobConstraint : IRouteConstraint

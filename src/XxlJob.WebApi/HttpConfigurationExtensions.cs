@@ -1,5 +1,4 @@
 using Microsoft.Extensions.Options;
-using System.Net;
 using System.Web.Http;
 using System.Web.Http.Routing;
 using XxlJob.Core;
@@ -35,7 +34,9 @@ public static class HttpConfigurationExtensions
         {
             var response = request.CreateResponse();
 
-            await GetXxlRestfulServiceHandler(request).HandlerAsync(new WebApiContext(response), cancellationToken).ConfigureAwait(false);
+            var method = request.GetRouteData()?.Values.TryGetValue("method:xxlJob", out var value) == true ? value?.ToString() : null;
+
+            await GetXxlRestfulServiceHandler(request).HandlerAsync(new WebApiContext(response, method ?? ""), cancellationToken).ConfigureAwait(false);
 
             return response;
         }
