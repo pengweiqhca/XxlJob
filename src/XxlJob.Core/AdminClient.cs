@@ -8,14 +8,14 @@ namespace XxlJob.Core;
 
 public class AdminClient
 {
-    private readonly XxlJobExecutorOptions _options;
+    private readonly XxlJobOptions _options;
     private readonly IHttpClientFactory _factory;
     private readonly ILogger<AdminClient> _logger;
     private readonly List<AddressEntry> _addresses;
     private int _currentIndex;
     private static readonly string Mapping = "/api";
 
-    public AdminClient(IOptions<XxlJobExecutorOptions> optionsAccessor
+    public AdminClient(IOptions<XxlJobOptions> optionsAccessor
         , IHttpClientFactory factory
         , ILogger<AdminClient> logger)
     {
@@ -32,7 +32,7 @@ public class AdminClient
 
     private void InitAddress()
     {
-        foreach (var item in _options.AdminAddresses.Split(';', ','))
+        foreach (var item in _options.AdminAddresses)
         {
             try
             {

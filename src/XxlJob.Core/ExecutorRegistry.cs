@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using System.Net;
 using XxlJob.Core.Config;
 using XxlJob.Core.Internal;
 using XxlJob.Core.Model;
@@ -12,11 +13,11 @@ namespace XxlJob.Core;
 public class ExecutorRegistry : IExecutorRegistry
 {
     private readonly AdminClient _adminClient;
-    private readonly XxlJobExecutorOptions _options;
+    private readonly XxlJobOptions _options;
     private readonly ILogger<ExecutorRegistry> _logger;
     private TaskCompletionSource<object?>? _tcs;
 
-    public ExecutorRegistry(AdminClient adminClient, IOptions<XxlJobExecutorOptions> optionsAccessor, ILogger<ExecutorRegistry> logger)
+    public ExecutorRegistry(AdminClient adminClient, IOptions<XxlJobOptions> optionsAccessor, ILogger<ExecutorRegistry> logger)
     {
         if (optionsAccessor == null) throw new ArgumentNullException(nameof(optionsAccessor));
 
@@ -38,7 +39,7 @@ public class ExecutorRegistry : IExecutorRegistry
         {
             RegistryGroup = "EXECUTOR",
             RegistryKey = _options.AppName,
-            RegistryValue = string.IsNullOrEmpty(_options.SpecialBindUrl) ? $"http://{_options.SpecialBindAddress}:{_options.Port}/" : _options.SpecialBindUrl
+            RegistryValue = $"http://{_options.IpAddress}:{_options.Port}/{_options.BasePath?.Trim()}",
         };
 
         _logger.LogInformation(">>>>>>>> start registry to admin <<<<<<<<");

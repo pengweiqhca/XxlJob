@@ -23,7 +23,7 @@ public class CallbackTaskQueue:IDisposable
 
     private Task? _runTask;
 
-    public CallbackTaskQueue(AdminClient adminClient,IJobLogger jobLogger,IOptions<XxlJobExecutorOptions> optionsAccessor
+    public CallbackTaskQueue(AdminClient adminClient,IJobLogger jobLogger,IOptions<XxlJobOptions> optionsAccessor
         , ILoggerFactory loggerFactory)
     {
         _adminClient = adminClient;

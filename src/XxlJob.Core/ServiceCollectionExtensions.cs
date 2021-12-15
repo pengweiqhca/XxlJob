@@ -16,13 +16,13 @@ public static class ServiceCollectionExtensions
         services.AddXxlJob(configuration.GetSection("xxlJob"));
 
     public static IXxlJobBuilder AddXxlJob(this IServiceCollection services, IConfigurationSection configuration) =>
-        services.Configure<XxlJobExecutorOptions>(configuration)
-            .AddSingleton<IValidateOptions<XxlJobExecutorOptions>, XxlJobExecutorValidateOptions>()
+        services.Configure<XxlJobOptions>(configuration)
+            .AddSingleton<IValidateOptions<XxlJobOptions>, XxlJobValidateOptions>()
             .AddXxlJobCore();
 
-    public static IXxlJobBuilder AddXxlJob(this IServiceCollection services, Action<XxlJobExecutorOptions> configAction) =>
+    public static IXxlJobBuilder AddXxlJob(this IServiceCollection services, Action<XxlJobOptions> configAction) =>
         services.Configure(configAction)
-            .AddSingleton<IValidateOptions<XxlJobExecutorOptions>, XxlJobExecutorValidateOptions>()
+            .AddSingleton<IValidateOptions<XxlJobOptions>, XxlJobValidateOptions>()
             .AddXxlJobCore();
 
     private static IXxlJobBuilder AddXxlJobCore(this IServiceCollection services)

@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using XxlJob.Core;
+using XxlJob.Core.Config;
 
 namespace XxlJob.AspNetCore;
 
@@ -11,11 +12,17 @@ public static class EndpointExtensions
 {
     public static IEndpointConventionBuilder MapXxlJob(this IEndpointRouteBuilder endpoints)
     {
+        if (endpoints == null) throw new ArgumentNullException(nameof(endpoints));
+
         endpoints.ServiceProvider.GetRequiredService<IOptions<RouteOptions>>().Value
             .ConstraintMap["xxlJob"] = typeof(XxlJobConstraint);
 
-        return endpoints.Map("{method:xxlJob}", context =>
-                context.RequestServices.GetRequiredService<XxlRestfulServiceHandler>()
+        var basePath = endpoints.ServiceProvider.GetRequiredService<IOptions<XxlJobOptions>>().Value.BasePath;
+
+        basePath = string.IsNullOrWhiteSpace(basePath) ? null : basePath.Trim('/') + "/";
+
+        return endpoints.Map(basePath + "{method:xxlJob}",
+                context => context.RequestServices.GetRequiredService<XxlRestfulServiceHandler>()
                     .HandlerAsync(new AspNetCoreContext(context), context.RequestAborted))
             .WithDisplayName("XxlJob");
     }

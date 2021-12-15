@@ -1,7 +1,9 @@
 using Microsoft.Extensions.DependencyInjection;
 using System.Web;
 using System.Web.Routing;
+using Microsoft.Extensions.Options;
 using XxlJob.Core;
+using XxlJob.Core.Config;
 
 namespace XxlJob.AspNet;
 
@@ -10,11 +12,24 @@ public static class RouteCollectionExtensions
     /// <param name="endpoints"></param>
     /// <param name="requestServices">获取当前请求上下文容器实例（比如Autofac lifetime）</param>
     /// <exception cref="ArgumentNullException"></exception>
-    public static RouteCollection MapXxlJob(this RouteCollection endpoints, Func<HttpContextBase, IServiceProvider> requestServices)
+    public static RouteCollection MapXxlJob(this RouteCollection endpoints,
+        Func<HttpContextBase, IServiceProvider> requestServices) =>
+        endpoints.MapXxlJob("xxl-job", requestServices);
+
+    /// <param name="endpoints"></param>
+    /// <param name="basePath"></param>
+    /// <param name="requestServices">获取当前请求上下文容器实例（比如Autofac lifetime）</param>
+    /// <exception cref="ArgumentNullException"></exception>
+    public static RouteCollection MapXxlJob(this RouteCollection endpoints,
+        string? basePath,
+        Func<HttpContextBase, IServiceProvider> requestServices)
     {
+        if (endpoints == null) throw new ArgumentNullException(nameof(endpoints));
         if (requestServices == null) throw new ArgumentNullException(nameof(requestServices));
 
-        endpoints.Add("XxlJob", new Route("{method:xxlJob}", null,
+        basePath = string.IsNullOrWhiteSpace(basePath) ? null : basePath!.Trim('/') + "/";
+
+        endpoints.Add("XxlJob", new Route(basePath + "{method:xxlJob}", null,
             new RouteValueDictionary { { "xxlJob", new XxlJobConstraint(requestServices) } },
             new XxlJobHandler(requestServices)));
 

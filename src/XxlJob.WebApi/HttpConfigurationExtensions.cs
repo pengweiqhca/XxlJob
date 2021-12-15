@@ -1,16 +1,28 @@
+using Microsoft.Extensions.Options;
+using System.Net;
 using System.Web.Http;
 using System.Web.Http.Routing;
 using XxlJob.Core;
+using XxlJob.Core.Config;
 
 namespace XxlJob.WebApi;
 
-public static class EndpointExtensions
+public static class HttpConfigurationExtensions
 {
-    /// <param name="endpoints"></param>
-    /// <exception cref="ArgumentNullException"></exception>
-    public static IHttpRoute MapXxlJob(this HttpRouteCollection endpoints) =>
-        endpoints.MapHttpRoute("XxlJob", "{method:xxlJob}", null,
-            new { xxlJob = new XxlJobConstraint() }, new XxlJobHandler());
+    public static HttpConfiguration UseXxlJob(this HttpConfiguration configuration)
+    {
+        if (configuration == null) throw new ArgumentNullException(nameof(configuration));
+
+        var options = configuration.DependencyResolver.GetService(typeof(IOptions<XxlJobOptions>)) as IOptions<XxlJobOptions>
+                      ?? throw new InvalidOperationException("不能从DependencyResolver获取到IOptions<XxlJobOptions>的实例");
+
+        var basePath = string.IsNullOrWhiteSpace(options.Value.BasePath) ? null : options.Value.BasePath!.Trim('/') + "/";
+
+        configuration.Routes.MapHttpRoute("XxlJob", basePath + "{method:xxlJob}", null,
+           new { xxlJob = new XxlJobConstraint() }, new XxlJobHandler());
+
+        return configuration;
+    }
 
     private static XxlRestfulServiceHandler GetXxlRestfulServiceHandler(HttpRequestMessage request) =>
         request.GetDependencyScope().GetService(typeof(XxlRestfulServiceHandler)) is XxlRestfulServiceHandler handler

@@ -15,8 +15,8 @@ public class JobLogger : IJobLogger
 
     private readonly AsyncLocal<string> _logFileName = new();
 
-    private readonly XxlJobExecutorOptions _options;
-    public JobLogger(IOptions<XxlJobExecutorOptions> optionsAccessor, ILogger<JobLogger> logger)
+    private readonly XxlJobOptions _options;
+    public JobLogger(IOptions<XxlJobOptions> optionsAccessor, ILogger<JobLogger> logger)
     {
         _logger = logger;
         _options = optionsAccessor.Value;

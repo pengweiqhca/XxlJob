@@ -1,12 +1,14 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Options;
 using System;
 using System.Web;
 using System.Web.Hosting;
 using System.Web.Routing;
 using XxlJob.AspNet;
 using XxlJob.Core;
+using XxlJob.Core.Config;
 
 namespace AspNetExecutor;
 
@@ -28,23 +30,17 @@ public class Global : HttpApplication
     {
         _host.Start();
 
-        RouteTable.Routes.MapXxlJob(context => (IServiceProvider)context.Items[Key]);
+        RouteTable.Routes.MapXxlJob(_host.Services.GetRequiredService<IOptions<XxlJobOptions>>().Value.BasePath, context => (IServiceProvider)context.Items[Key]);
 
         Disposed += delegate { _host.Dispose(); };
     }
 
-    protected void Application_BeginRequest(object sender, EventArgs e)
-    {
+    protected void Application_BeginRequest(object sender, EventArgs e) =>
         Context.Items[Key] = _host.Services.CreateScope();
-    }
 
-    protected void Application_EndRequest(object sender, EventArgs e)
-    {
+    protected void Application_EndRequest(object sender, EventArgs e) =>
         (Context.Items[Key] as IDisposable)?.Dispose();
-    }
 
-    protected void Application_End(object sender, EventArgs e)
-    {
+    protected void Application_End(object sender, EventArgs e) =>
         _host.StopAsync().GetAwaiter().GetResult();
-    }
 }

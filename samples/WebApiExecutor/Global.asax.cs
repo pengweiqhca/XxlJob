@@ -31,7 +31,8 @@ public class Global : HttpApplication
         _host.Start();
 
         GlobalConfiguration.Configuration.DependencyResolver = new AutofacWebApiDependencyResolver(_host.Services.GetRequiredService<ILifetimeScope>());
-        GlobalConfiguration.Configuration.Routes.MapXxlJob();
+
+        GlobalConfiguration.Configuration.UseXxlJob();
 
         Disposed += delegate { _host.Dispose(); };
     }

@@ -2,32 +2,32 @@ using XxlJob.Core.Internal;
 
 namespace XxlJob.Core.Config;
 
-public class XxlJobExecutorOptions
+public class XxlJobOptions
 {
     /// <summary>
-    /// 管理端地址，多个以;分隔
+    /// 管理端地址
     /// </summary>
-    public string AdminAddresses { get; set; } = "";
+    public string[] AdminAddresses { get; set; } = default!;
 
     /// <summary>
     /// appName自动注册时要去管理端配置一致
     /// </summary>
-    public string AppName { get; set; } = "xxl-job-executor-dotnet";
-
-    /// <summary>
-    /// 绑定的特殊的URL，如果该项配置存在，则忽略SpecialBindAddress和Port
-    /// </summary>
-    public string? SpecialBindUrl { get; set; }
+    public string? AppName { get; set; }
 
     /// <summary>
     /// 自动注册时提交的地址，为空会自动获取内网地址
     /// </summary>
-    public string? SpecialBindAddress { get; set; } = IpUtility.GetLocalIntranetIp()?.MapToIPv4().ToString();
+    public string? IpAddress { get; set; } = IpUtility.GetLocalIntranetIp()?.MapToIPv4().ToString();
 
     /// <summary>
     /// 绑定端口
     /// </summary>
     public int Port { get; set; }
+
+    /// <summary>
+    /// 绑定的特殊的Path前缀，默认为xxl-job
+    /// </summary>
+    public string? BasePath { get; set; } = "xxl-job";
 
     /// <summary>
     /// 是否自动注册，默认true

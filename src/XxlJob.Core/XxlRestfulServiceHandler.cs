@@ -11,9 +11,9 @@ public class XxlRestfulServiceHandler
     private readonly JobDispatcher _jobDispatcher;
     private readonly IJobLogger _jobLogger;
     private readonly ILogger<XxlRestfulServiceHandler> _logger;
-    private readonly XxlJobExecutorOptions _options;
+    private readonly XxlJobOptions _options;
 
-    public XxlRestfulServiceHandler(IOptions<XxlJobExecutorOptions> optionsAccessor,
+    public XxlRestfulServiceHandler(IOptions<XxlJobOptions> optionsAccessor,
         JobDispatcher jobDispatcher,
         IJobLogger jobLogger,
         ILogger<XxlRestfulServiceHandler> logger)
@@ -26,7 +26,7 @@ public class XxlRestfulServiceHandler
         _options = optionsAccessor.Value;
         if (_options == null)
         {
-            throw new ArgumentNullException(nameof(XxlJobExecutorOptions));
+            throw new ArgumentNullException(nameof(XxlJobOptions));
         }
     }
 
