@@ -2,6 +2,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System.Net.Http.Json;
 using XxlJob.Core.Config;
+using XxlJob.Core.Internal;
 using XxlJob.Core.Model;
 
 namespace XxlJob.Core;
@@ -15,9 +16,9 @@ public class AdminClient
     private int _currentIndex;
     private static readonly string Mapping = "/api";
 
-    public AdminClient(IOptions<XxlJobOptions> optionsAccessor
-        , IHttpClientFactory factory
-        , ILogger<AdminClient> logger)
+    public AdminClient(IOptions<XxlJobOptions> optionsAccessor,
+        IHttpClientFactory factory,
+        ILogger<AdminClient> logger)
     {
         if (optionsAccessor == null) throw new ArgumentNullException(nameof(optionsAccessor));
 
@@ -80,7 +81,7 @@ public class AdminClient
 
                 request.Content = JsonContent.Create(jsonObject);
 
-                using var response = await _factory.CreateClient("XxlJobClient").SendAsync(request).ConfigureAwait(false);
+                using var response = await _factory.CreateClient(Constants.AdminClientName).SendAsync(request).ConfigureAwait(false);
                 ret = await response.Content.ReadFromJsonAsync<ReturnT>().ConfigureAwait(false);
 
                 address.Reset();

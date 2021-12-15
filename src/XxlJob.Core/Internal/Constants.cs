@@ -19,6 +19,7 @@ internal static class Constants
     public const string XxlJobRetryLogsFile = "xxl-job-retry.log";
     public const string HandleLogsDirectory = "HandlerLogs";
 
+    public const string AdminClientName = "XxlJobAdminClient";
     public const string DefaultHttpClientName = "XxlJobHttpClient";
 
     public const int DefaultLogRetentionDays = 30;
