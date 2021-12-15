@@ -16,7 +16,7 @@ internal static class Constants
     public const string JavaClassFulName = "java.lang.Class";
     public const string JavaListFulName = "java.util.List";
 
-    public const string  XxlJobRetryLogsFile = "xxl-job-retry.log";
+    public const string XxlJobRetryLogsFile = "xxl-job-retry.log";
     public const string HandleLogsDirectory = "HandlerLogs";
 
     public const string DefaultHttpClientName = "XxlJobHttpClient";
@@ -25,11 +25,11 @@ internal static class Constants
 
     public static TimeSpan RpcRequestExpireTimeSpan = TimeSpan.FromMinutes(3);
 
-    public static  TimeSpan RegistryInterval = TimeSpan.FromSeconds(60);
+    public static TimeSpan RegistryInterval = TimeSpan.FromSeconds(60);
 
     public const int MaxCallbackRetryTimes = 10;
     //每次回调最多发送几条记录
-    public const int MaxCallbackRecordsPerRequest =5;
+    public const int MaxCallbackRecordsPerRequest = 5;
     public static TimeSpan CallbackRetryInterval = TimeSpan.FromSeconds(600);
 
     //Admin集群机器请求默认超时时间

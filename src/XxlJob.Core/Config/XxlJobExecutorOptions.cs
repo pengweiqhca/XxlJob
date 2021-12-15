@@ -30,9 +30,9 @@ public class XxlJobExecutorOptions
     public int Port { get; set; }
 
     /// <summary>
-    /// 是否自动注册
+    /// 是否自动注册，默认true
     /// </summary>
-    public bool AutoRegistry { get; set; }
+    public bool AutoRegistry { get; set; } = true;
 
     /// <summary>
     /// 认证票据

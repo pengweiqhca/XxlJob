@@ -8,15 +8,27 @@ public class JobHandlerOptions
 
     public IReadOnlyDictionary<string, JobHandler> JobHandlers => _jobHandlers;
 
-    public void AddJob<TJob>() where TJob : IJobHandler =>
-        AddJob<TJob>(typeof(TJob).GetCustomAttribute<JobHandlerAttribute>()?.Name ?? typeof(TJob).Name);
+    public void AddJob<TJob>() where TJob : class, IJobHandler =>
+        AddJob(typeof(TJob).GetCustomAttribute<JobHandlerAttribute>()?.Name ?? typeof(TJob).Name, typeof(TJob));
 
-    public void AddJob<TJob>(string jobName) where TJob : IJobHandler
+    public void AddJob(Type jobType) =>
+        AddJob(jobType.GetCustomAttribute<JobHandlerAttribute>()?.Name ?? jobType.Name, jobType);
+
+    public void AddJob<TJob>(string jobName) where TJob : class, IJobHandler =>
+        AddJob(jobName, typeof(TJob));
+
+    public void AddJob(string jobName, Type jobType)
     {
+        if (!typeof(IJobHandler).IsAssignableFrom(jobType))
+            throw new ArgumentException($"{jobType.FullName}没有实现{typeof(IJobHandler).FullName}", nameof(jobType));
+
+        if (jobType.IsAbstract || !jobType.IsClass)
+            throw new ArgumentException($"{jobType.FullName}不是可实例化", nameof(jobType));
+
         if (_jobHandlers.ContainsKey(jobName))
             throw new Exception($"same IJobHandler' name: [{jobName}]");
 
-        _jobHandlers.Add(jobName, new JobHandler(null, typeof(TJob)));
+        _jobHandlers.Add(jobName, new JobHandler(null, jobType));
     }
 
     public void AddJob(IJobHandler job)

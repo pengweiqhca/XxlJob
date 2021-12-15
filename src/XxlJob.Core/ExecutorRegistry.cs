@@ -14,6 +14,7 @@ public class ExecutorRegistry : IExecutorRegistry
     private readonly AdminClient _adminClient;
     private readonly XxlJobExecutorOptions _options;
     private readonly ILogger<ExecutorRegistry> _logger;
+    private TaskCompletionSource<object?>? _tcs;
 
     public ExecutorRegistry(AdminClient adminClient, IOptions<XxlJobExecutorOptions> optionsAccessor, ILogger<ExecutorRegistry> logger)
     {
@@ -22,11 +23,19 @@ public class ExecutorRegistry : IExecutorRegistry
         _adminClient = adminClient;
         _options = optionsAccessor.Value;
         _logger = logger;
+
+        if (!_options.AutoRegistry) _tcs = new TaskCompletionSource<object?>();
     }
+
+    public void BeginRegistry() => Interlocked.Exchange(ref _tcs, null)?.TrySetResult(null);
 
     public async Task RegistryAsync(CancellationToken cancellationToken)
     {
-        var registryParam = new RegistryParam {
+        //等待执行BeginRegistry;
+        if (_tcs?.Task is Task task) await task.ConfigureAwait(false);
+
+        var registryParam = new RegistryParam
+        {
             RegistryGroup = "EXECUTOR",
             RegistryKey = _options.AppName,
             RegistryValue = string.IsNullOrEmpty(_options.SpecialBindUrl) ? $"http://{_options.SpecialBindAddress}:{_options.Port}/" : _options.SpecialBindUrl
@@ -41,8 +50,11 @@ public class ExecutorRegistry : IExecutorRegistry
             try
             {
                 var ret = await _adminClient.Registry(registryParam).ConfigureAwait(false);
+
                 _logger.LogDebug("registry last result:{0}", ret?.Code);
+
                 errorTimes = 0;
+
                 await Task.Delay(Constants.RegistryInterval, cancellationToken).ConfigureAwait(false);
             }
             catch (TaskCanceledException)
@@ -52,7 +64,9 @@ public class ExecutorRegistry : IExecutorRegistry
             catch (Exception ex)
             {
                 errorTimes++;
+
                 await Task.Delay(Constants.RegistryInterval, cancellationToken).ConfigureAwait(false);
+
                 _logger.LogError(ex, "registry error:{0},{1} Times", ex.Message, errorTimes);
             }
         }
@@ -62,6 +76,7 @@ public class ExecutorRegistry : IExecutorRegistry
         _logger.LogInformation(">>>>>>>> start remove registry to admin <<<<<<<<");
 
         var removeRet = await _adminClient.RegistryRemove(registryParam).ConfigureAwait(false);
+
         _logger.LogInformation("remove registry last result:{0}", removeRet?.Code);
         _logger.LogInformation(">>>>>>>> end remove registry to admin <<<<<<<<");
     }

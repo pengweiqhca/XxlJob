@@ -18,15 +18,10 @@ public class Global : HttpApplication
 
     public Global() => _host = new HostBuilder()
         .ConfigureAppConfiguration(builder => builder.AddJsonFile(HostingEnvironment.MapPath("~/App_Data/appsettings.json")))
-        .ConfigureServices((context, services) =>
-        {
-            services.AddXxlJobExecutor(context.Configuration);
-            services.AddDefaultXxlJobHandlers(); // add httpHandler;
-
-            services.AddJob<DemoJobHandler>(); // 添加自定义的jobHandler
-
-            services.AddAutoRegistry(); // 自动注册
-        })
+        .ConfigureServices((context, services) => services
+            .AddXxlJob(context.Configuration)
+            .AddDefaultXxlJobHandlers()
+            .ScanJob(typeof(DemoJobHandler).Assembly))
         .Build();
 
     protected void Application_Start(object sender, EventArgs e)

@@ -1,10 +1,8 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using XxlJob.Core.Config;
-using XxlJob.Core.DefaultHandlers;
 using XxlJob.Core.Hosted;
 using XxlJob.Core.Logger;
 using XxlJob.Core.Queue;
@@ -14,55 +12,20 @@ namespace XxlJob.Core;
 
 public static class ServiceCollectionExtensions
 {
-    public static IServiceCollection AddXxlJobExecutor(this IServiceCollection services, IConfiguration configuration)
-    {
-        services.AddLogging();
-        services.AddOptions();
+    public static IXxlJobBuilder AddXxlJob(this IServiceCollection services, IConfiguration configuration) =>
+        services.AddXxlJob(configuration.GetSection("xxlJob"));
 
-        services.Configure<XxlJobExecutorOptions>(configuration.GetSection("xxlJob"))
+    public static IXxlJobBuilder AddXxlJob(this IServiceCollection services, IConfigurationSection configuration) =>
+        services.Configure<XxlJobExecutorOptions>(configuration)
             .AddSingleton<IValidateOptions<XxlJobExecutorOptions>, XxlJobExecutorValidateOptions>()
-            .AddXxlJobExecutorServiceDependency();
+            .AddXxlJobCore();
 
-        return services;
-    }
-    public static IServiceCollection AddXxlJobExecutor(this IServiceCollection services, Action<XxlJobExecutorOptions> configAction)
-    {
-        services.AddLogging();
-        services.AddOptions();
-        services.Configure(configAction).AddXxlJobExecutorServiceDependency();
-        return services;
-    }
+    public static IXxlJobBuilder AddXxlJob(this IServiceCollection services, Action<XxlJobExecutorOptions> configAction) =>
+        services.Configure(configAction)
+            .AddSingleton<IValidateOptions<XxlJobExecutorOptions>, XxlJobExecutorValidateOptions>()
+            .AddXxlJobCore();
 
-    public static IServiceCollection AddDefaultXxlJobHandlers(this IServiceCollection services)
-    {
-        services.AddSingleton<IJobHandler, SimpleHttpJobHandler>();
-
-        return services;
-    }
-
-    public static IServiceCollection AddJob<TJob>(this IServiceCollection services) where TJob : class, IJobHandler
-    {
-        services.TryAddScoped<TJob>();
-
-        return services.Configure<JobHandlerOptions>(options => options.AddJob<TJob>());
-    }
-
-    public static IServiceCollection AddJob<TJob>(this IServiceCollection services, string jobName) where TJob : class, IJobHandler
-    {
-        services.TryAddScoped<TJob>();
-
-        return services.Configure<JobHandlerOptions>(options => options.AddJob<TJob>(jobName));
-    }
-
-    public static IServiceCollection AddAutoRegistry(this IServiceCollection services)
-    {
-        services.AddSingleton<IExecutorRegistry, ExecutorRegistry>()
-            .AddSingleton<IHostedService, JobsExecuteHostedService>();
-
-        return services;
-    }
-
-    private static IServiceCollection AddXxlJobExecutorServiceDependency(this IServiceCollection services)
+    private static IXxlJobBuilder AddXxlJobCore(this IServiceCollection services)
     {
         //可在外部提前注册对应实现，并替换默认实现
         services.TryAddSingleton<IJobLogger, JobLogger>();
@@ -77,6 +40,9 @@ public static class ServiceCollectionExtensions
         services.TryAddSingleton<AdminClient>();
         services.TryAddSingleton<ITaskExecutor, BeanTaskExecutor>();
 
-        return services;
+        services.TryAddSingleton<IExecutorRegistry, ExecutorRegistry>();
+        services.AddHostedService<JobsExecuteHostedService>();
+
+        return new XxlJobBuilder(services);
     }
 }
