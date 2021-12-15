@@ -94,7 +94,9 @@ public class JobTaskQueue : IDisposable
         _cancellationTokenSource = new CancellationTokenSource();
         var ct = _cancellationTokenSource.Token;
 
-        _runTask = Task.Factory.StartNew(async () =>
+        using var __ = ExecutionContext.SuppressFlow();
+
+        _runTask = Task.Run(async () =>
         {
 
             //ct.ThrowIfCancellationRequested();
@@ -167,7 +169,5 @@ public class JobTaskQueue : IDisposable
             _cancellationTokenSource = null;
 
         }, _cancellationTokenSource.Token);
-
-
     }
 }

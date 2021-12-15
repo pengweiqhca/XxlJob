@@ -35,6 +35,9 @@ public class RetryCallbackTaskQueue : IDisposable
     {
         _cancellation = new CancellationTokenSource();
         var stopToken = _cancellation.Token;
+
+        using var _ = ExecutionContext.SuppressFlow();
+
         _runTask = Task.Factory.StartNew(async () =>
         {
             while (!stopToken.IsCancellationRequested)

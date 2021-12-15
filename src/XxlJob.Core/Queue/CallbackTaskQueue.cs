@@ -7,7 +7,7 @@ using XxlJob.Core.Model;
 
 namespace XxlJob.Core.Queue;
 
-public class CallbackTaskQueue:IDisposable
+public class CallbackTaskQueue : IDisposable
 {
     private readonly AdminClient _adminClient;
     private readonly IJobLogger _jobLogger;
@@ -23,7 +23,7 @@ public class CallbackTaskQueue:IDisposable
 
     private Task? _runTask;
 
-    public CallbackTaskQueue(AdminClient adminClient,IJobLogger jobLogger,IOptions<XxlJobOptions> optionsAccessor
+    public CallbackTaskQueue(AdminClient adminClient, IJobLogger jobLogger, IOptions<XxlJobOptions> optionsAccessor
         , ILoggerFactory loggerFactory)
     {
         _adminClient = adminClient;
@@ -52,10 +52,12 @@ public class CallbackTaskQueue:IDisposable
 
     private void StartCallBack()
     {
-        if ( _isRunning)
+        if (_isRunning)
         {
             return;
         }
+
+        using var _ = ExecutionContext.SuppressFlow();
 
         _runTask = Task.Run(async () =>
         {
@@ -72,14 +74,13 @@ public class CallbackTaskQueue:IDisposable
             _logger.LogDebug("end to callback");
             _isRunning = false;
         });
-
     }
 
     private async Task DoCallBack()
     {
         var list = new List<HandleCallbackParam>();
 
-        if(!_taskQueue.TryDequeue(out var item))
+        if (!_taskQueue.TryDequeue(out var item))
         {
             return;
         }
@@ -91,8 +92,9 @@ public class CallbackTaskQueue:IDisposable
         {
             result = await _adminClient.Callback(list).ConfigureAwait(false);
         }
-        catch (Exception ex){
-            _logger.LogError(ex,"trigger callback error:{error}",ex.Message);
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "trigger callback error:{error}", ex.Message);
             result = ReturnT.Failed(ex.Message);
             _retryQueue.Push(list);
         }
@@ -100,11 +102,11 @@ public class CallbackTaskQueue:IDisposable
         LogCallBackResult(result, list);
     }
 
-    private void LogCallBackResult(ReturnT result,List<HandleCallbackParam> list)
+    private void LogCallBackResult(ReturnT result, List<HandleCallbackParam> list)
     {
         foreach (var param in list)
         {
-            _jobLogger.LogSpecialFile(param.LogDateTime, param.LogId, result.Msg??"Success");
+            _jobLogger.LogSpecialFile(param.LogDateTime, param.LogId, result.Msg ?? "Success");
         }
     }
 }

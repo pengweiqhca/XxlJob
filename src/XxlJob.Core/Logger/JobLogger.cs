@@ -134,6 +134,8 @@ public class JobLogger : IJobLogger
             _options.LogRetentionDays = Constants.DefaultLogRetentionDays;
         }
 
+        using var _ = ExecutionContext.SuppressFlow();
+
         Task.Run(() =>
         {
             try
@@ -147,13 +149,9 @@ public class JobLogger : IJobLogger
                 var today = DateTime.UtcNow.Date;
                 foreach (var dir in handlerLogsDir.GetDirectories())
                 {
-                    if (DateTime.TryParse(dir.Name, out var dirDate))
-                    {
-                        if (today.Subtract(dirDate.Date).Days > _options.LogRetentionDays)
-                        {
-                            dir.Delete(true);
-                        }
-                    }
+                    if (DateTime.TryParse(dir.Name, out var dirDate) &&
+                        today.Subtract(dirDate.Date).Days > _options.LogRetentionDays)
+                        dir.Delete(true);
                 }
             }
             catch (Exception ex)
