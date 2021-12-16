@@ -28,9 +28,7 @@ public class DefaultJobHandlerFactory : IJobHandlerFactory
 
         if (job is IDisposable) return new JobHandlerWrapper((IJobHandler)job);
 
-        job ??= ActivatorUtilities.CreateInstance(provider, jobHandler.JobType);
-
-        return (IJobHandler)job;
+        return (IJobHandler)(job ?? ActivatorUtilities.CreateInstance(provider, jobHandler.JobType));
     }
 
     /// <summary>禁止被用于Dispose</summary>

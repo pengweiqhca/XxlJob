@@ -126,10 +126,17 @@ public class JobTaskQueue : IDisposable
                                 , triggerParam.LogId, triggerParam.JobId, _idInQueue.ContainsKey(triggerParam.LogId));
                         }
 
+                        if (string.IsNullOrWhiteSpace(triggerParam.ExecutorHandler))
+                        {
+                            _jobLogger.Log("<br>----------- job handler of job {0} is null or empty.", triggerParam.JobId);
+
+                            continue;
+                        }
+
                         //set log file;
                         _jobLogger.SetLogFile(triggerParam.LogDateTime, triggerParam.LogId);
 
-                        activity = ActivityHelper.XxlJobSource.StartActivity("XxlJob.Execute", ActivityKind.Internal, activityContext);
+                        activity = ActivityHelper.XxlJobSource.StartActivity(triggerParam.ExecutorHandler!, ActivityKind.Consumer, activityContext);
 
                         if (activity != null)
                             _jobLogger.Log("<br>----------- xxl-job job execute start -----------<br>----------- ActivityId:{0}<br>----------- Param:{1}", activity.Id, triggerParam.ExecutorParams);
@@ -140,7 +147,11 @@ public class JobTaskQueue : IDisposable
 
                         _jobLogger.Log("<br>----------- xxl-job job execute end(finish) -----------<br>----------- ReturnT:" + result.Code);
 
-                        activity?.SetStatus(ActivityStatusCode.Unset);
+                        if (activity != null)
+                        {
+                            if (result.Code == ReturnT.SuccessCode) activity.SetStatus(ActivityStatusCode.Ok);
+                            else activity.SetStatus(ActivityStatusCode.Error, result.Msg);
+                        }
                     }
                     else
                     {
@@ -150,6 +161,7 @@ public class JobTaskQueue : IDisposable
                 catch (Exception ex)
                 {
                     result = ReturnT.Failed("Dequeue Task Failed:" + ex.Message);
+
                     _jobLogger.Log("<br>----------- JobThread Exception:" + ex.Message + "<br>----------- xxl-job job execute end(error) -----------");
 
                     activity?.RecordException(ex);

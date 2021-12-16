@@ -26,7 +26,7 @@ public class BeanTaskExecutor : ITaskExecutor
     public async Task<ReturnT> Execute(TriggerParam triggerParam)
     {
         if (triggerParam.ExecutorHandler == null)
-            return ReturnT.Failed($"job handler [{triggerParam.ExecutorHandler} not found.");
+            return ReturnT.Failed($"job handler of job {triggerParam.JobId} is null.");
 
         var scope = _factory.CreateAsyncScope();
 
@@ -34,7 +34,7 @@ public class BeanTaskExecutor : ITaskExecutor
 
         var handler = _handlerFactory.GetJobHandler(scope.ServiceProvider, triggerParam.ExecutorHandler);
 
-        if (handler == null) return ReturnT.Failed($"job handler [{triggerParam.ExecutorHandler} not found.");
+        if (handler == null) return ReturnT.Failed($"job handler [{triggerParam.ExecutorHandler}] not found.");
 
         try
         {
@@ -42,8 +42,10 @@ public class BeanTaskExecutor : ITaskExecutor
         }
         finally
         {
-            // ReSharper disable once SuspiciousTypeConversion.Global
-            if (handler is IDisposable d) d.Dispose();
+            // ReSharper disable SuspiciousTypeConversion.Global
+            if (handler is IAsyncDisposable ad) await ad.DisposeAsync().ConfigureAwait(false);
+            else if (handler is IDisposable d) d.Dispose();
+            // ReSharper restore SuspiciousTypeConversion.Global
         }
     }
 }
