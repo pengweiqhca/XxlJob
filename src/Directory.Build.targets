@@ -3,7 +3,7 @@
   <PropertyGroup>
     <AssemblyVersion>1.0</AssemblyVersion>
     <AssemblyTitle>$(AssemblyName) ($(TargetFramework))</AssemblyTitle>
-    <Version>$(AssemblyVersion).3</Version>
+    <Version>$(AssemblyVersion).4</Version>
   </PropertyGroup>
 
 </Project>
