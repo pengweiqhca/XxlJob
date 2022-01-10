@@ -42,7 +42,7 @@ public class XxlJobOptions
     /// <summary>
     /// 日志目录，默认为执行目录的logs子目录下，请配置绝对路径
     /// </summary>
-    public string LogPath { get; set; } = Path.Combine(AppContext.BaseDirectory, "./logs");
+    public string LogPath { get; set; } = Path.Combine(AppContext.BaseDirectory, "logs");
 
     /// <summary>
     /// 日志保留天数
