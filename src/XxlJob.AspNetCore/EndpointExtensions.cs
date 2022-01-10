@@ -23,7 +23,9 @@ public static class EndpointExtensions
 
         return endpoints.Map(basePath + "{method:xxlJob}",
                 context => context.RequestServices.GetRequiredService<XxlRestfulServiceHandler>()
-                    .HandlerAsync(new AspNetCoreContext(context, context.Request.RouteValues.TryGetValue("method", out var value) ? value?.ToString() : null), context.RequestAborted))
+                    .HandlerAsync(new AspNetCoreContext(context,
+                        context.Request.RouteValues.TryGetValue("method", out var value) ? value?.ToString() : null),
+                        context.RequestAborted))
             .WithDisplayName("XxlJob");
     }
 
