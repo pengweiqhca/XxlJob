@@ -1,4 +1,3 @@
-using Microsoft.Extensions.DependencyInjection;
 using XxlJob.Core.TaskExecutors;
 
 namespace XxlJob.Core;
@@ -10,13 +9,8 @@ public class TaskExecutorFactory
 {
     private readonly Dictionary<string, ITaskExecutor> _cache = new();
 
-    public TaskExecutorFactory(IServiceProvider provider)
+    public TaskExecutorFactory(IEnumerable<ITaskExecutor> taskExecutors)
     {
-        var executors = provider.GetServices<ITaskExecutor>();
-
-        var taskExecutors = executors as ITaskExecutor[] ?? executors.ToArray();
-        if (!taskExecutors.Any()) return;
-
         foreach (var item in taskExecutors)
         {
             _cache.Add(item.GlueType, item);

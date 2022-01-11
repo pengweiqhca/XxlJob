@@ -66,9 +66,9 @@ public class XxlRestfulServiceHandler
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "响应出错" + ex.Message);
+            _logger.LogError(ex, "Handle command fail. " + ex.Message);
 
-            ret = ReturnT.Failed("执行器内部错误");
+            ret = ReturnT.Failed("Executor internal error.");
         }
 
         await context.WriteResponse(ret ?? ReturnT.Failed($"method {context.Method}  is not impl"), cancellationToken).ConfigureAwait(false);

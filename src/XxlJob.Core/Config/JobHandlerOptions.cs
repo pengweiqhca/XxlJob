@@ -20,13 +20,16 @@ public class JobHandlerOptions
     public void AddJob(string jobName, Type jobType)
     {
         if (!typeof(IJobHandler).IsAssignableFrom(jobType))
-            throw new ArgumentException($"{jobType.FullName}没有实现{typeof(IJobHandler).FullName}", nameof(jobType));
+            throw new ArgumentException($"{jobType.FullName} not implement {typeof(IJobHandler).FullName}", nameof(jobType));
 
-        if (jobType.IsAbstract || !jobType.IsClass)
-            throw new ArgumentException($"{jobType.FullName}不是可实例化", nameof(jobType));
+        if (jobType.IsAbstract )
+            throw new ArgumentException($"{jobType.FullName} should not abstract.", nameof(jobType));
+
+        if (!jobType.IsClass)
+            throw new ArgumentException($"{jobType.FullName} must be class.", nameof(jobType));
 
         if (_jobHandlers.ContainsKey(jobName))
-            throw new Exception($"same IJobHandler' name: [{jobName}]");
+            throw new Exception($"Same IJobHandler' name: [{jobName}]");
 
         _jobHandlers.Add(jobName, new JobHandler(null, jobType));
     }
@@ -36,7 +39,7 @@ public class JobHandlerOptions
         var jobName = job.GetType().GetCustomAttribute<JobHandlerAttribute>()?.Name ?? job.GetType().Name;
 
         if (_jobHandlers.ContainsKey(jobName))
-            throw new Exception($"same IJobHandler' name: [{jobName}]");
+            throw new Exception($"Same IJobHandler' name: [{jobName}], are you register repeatedly?");
 
         _jobHandlers.Add(jobName, new JobHandler(job, null));
     }

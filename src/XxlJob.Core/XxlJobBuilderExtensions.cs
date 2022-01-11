@@ -29,7 +29,7 @@ public static class XxlJobBuilderExtensions
         return builder;
     }
 
-    public static IXxlJobBuilder ScanJob(this IXxlJobBuilder builder, params Assembly[] assemblies)
+    public static IXxlJobBuilder ScanJob(this IXxlJobBuilder builder, params Assembly[]? assemblies)
     {
         if (assemblies == null || assemblies.Length < 1) return builder;
 

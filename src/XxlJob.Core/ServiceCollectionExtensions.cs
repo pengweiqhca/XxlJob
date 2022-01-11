@@ -4,7 +4,6 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
 using XxlJob.Core.Config;
 using XxlJob.Core.Hosted;
-using XxlJob.Core.Internal;
 using XxlJob.Core.Logger;
 using XxlJob.Core.Queue;
 using XxlJob.Core.TaskExecutors;
