@@ -1,6 +1,5 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using System.Net;
 using XxlJob.Core.Config;
 using XxlJob.Core.Internal;
 using XxlJob.Core.Model;
@@ -42,7 +41,7 @@ public class ExecutorRegistry : IExecutorRegistry
             RegistryValue = $"http://{_options.IpAddress}:{_options.Port}/{_options.BasePath?.Trim()}",
         };
 
-        _logger.LogInformation(">>>>>>>> start registry to admin <<<<<<<<");
+        _logger.LogInformation($">>>>>>>> start registry {registryParam.RegistryKey}({registryParam.RegistryValue}) to admin <<<<<<<<");
 
         var errorTimes = 0;
 
