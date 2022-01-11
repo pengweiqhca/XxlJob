@@ -36,7 +36,7 @@ public static class RouteCollectionExtensions
 
     private static XxlRestfulServiceHandler GetXxlRestfulServiceHandler(HttpContextBase httpContext, Func<HttpContextBase, IServiceProvider> requestServices)
     {
-        var provider = requestServices(httpContext) ?? throw new InvalidOperationException("requestServices不允许返回null");
+        var provider = requestServices(httpContext) ?? throw new InvalidOperationException("requestServices() should not return null.");
 
         return provider.GetRequiredService<XxlRestfulServiceHandler>();
     }

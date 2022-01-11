@@ -13,7 +13,7 @@ public static class HttpConfigurationExtensions
         if (configuration == null) throw new ArgumentNullException(nameof(configuration));
 
         var options = configuration.DependencyResolver.GetService(typeof(IOptions<XxlJobOptions>)) as IOptions<XxlJobOptions>
-                      ?? throw new InvalidOperationException("不能从DependencyResolver获取到IOptions<XxlJobOptions>的实例");
+                      ?? throw new InvalidOperationException("Can't get IOptions<XxlJobOptions> instance from WebApi DependencyScope.");
 
         var basePath = string.IsNullOrWhiteSpace(options.Value.BasePath) ? null : options.Value.BasePath!.Trim('/') + "/";
 
@@ -26,7 +26,7 @@ public static class HttpConfigurationExtensions
     private static XxlRestfulServiceHandler GetXxlRestfulServiceHandler(HttpRequestMessage request) =>
         request.GetDependencyScope().GetService(typeof(XxlRestfulServiceHandler)) is XxlRestfulServiceHandler handler
             ? handler
-            : throw new InvalidOperationException("不能通过WebApi自带依赖注入获取XxlRestfulServiceHandler实例");
+            : throw new InvalidOperationException("Can't get XxlRestfulServiceHandler instance from WebApi DependencyScope.");
 
     private class XxlJobHandler : HttpMessageHandler
     {
