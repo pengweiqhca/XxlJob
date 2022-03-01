@@ -1,7 +1,9 @@
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using System.Web;
 using System.Web.Routing;
 using XxlJob.Core;
+using XxlJob.Core.Config;
 
 namespace XxlJob.AspNet;
 
@@ -13,6 +15,15 @@ public static class RouteCollectionExtensions
     public static RouteCollection MapXxlJob(this RouteCollection endpoints,
         Func<HttpContextBase, IServiceProvider> requestServices) =>
         endpoints.MapXxlJob("xxl-job", requestServices);
+
+    /// <param name="endpoints"></param>
+    /// <param name="provider">启动时的服务提供器</param>
+    /// <param name="requestServices">获取当前请求上下文容器实例（比如Autofac lifetime）</param>
+    /// <exception cref="ArgumentNullException"></exception>
+    public static RouteCollection MapXxlJob(this RouteCollection endpoints,
+        IServiceProvider provider,
+        Func<HttpContextBase, IServiceProvider> requestServices) =>
+        endpoints.MapXxlJob(provider.GetRequiredService<IOptions<XxlJobOptions>>().Value.BasePath, requestServices);
 
     /// <param name="endpoints"></param>
     /// <param name="basePath"></param>
