@@ -10,21 +10,22 @@ namespace XxlJob.AspNetCore;
 
 public static class EndpointExtensions
 {
-    public static IEndpointConventionBuilder MapXxlJob(this IEndpointRouteBuilder endpoints)
+    public static IEndpointConventionBuilder MapXxlJob(this IEndpointRouteBuilder endpoints) =>
+        endpoints.MapXxlJob(endpoints.ServiceProvider.GetRequiredService<IOptions<XxlJobOptions>>().Value.BasePath);
+
+    public static IEndpointConventionBuilder MapXxlJob(this IEndpointRouteBuilder endpoints, string? basePath)
     {
         if (endpoints == null) throw new ArgumentNullException(nameof(endpoints));
 
         endpoints.ServiceProvider.GetRequiredService<IOptions<RouteOptions>>().Value
             .ConstraintMap["xxlJob"] = typeof(XxlJobConstraint);
 
-        var basePath = endpoints.ServiceProvider.GetRequiredService<IOptions<XxlJobOptions>>().Value.BasePath;
-
         basePath = string.IsNullOrWhiteSpace(basePath) ? null : basePath.Trim('/') + "/";
 
         return endpoints.Map(basePath + "{method:xxlJob}",
                 context => context.RequestServices.GetRequiredService<XxlRestfulServiceHandler>()
                     .HandlerAsync(new AspNetCoreContext(context,
-                        context.Request.RouteValues.TryGetValue("method", out var value) ? value?.ToString() : null),
+                            context.Request.RouteValues.TryGetValue("method", out var value) ? value?.ToString() : null),
                         context.RequestAborted))
             .WithDisplayName("XxlJob");
     }
