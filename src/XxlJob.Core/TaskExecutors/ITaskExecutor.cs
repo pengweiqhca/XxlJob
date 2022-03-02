@@ -6,5 +6,5 @@ public interface ITaskExecutor
 {
     string GlueType { get; }
 
-    Task<ReturnT> Execute(TriggerParam triggerParam);
+    Task<ReturnT> Execute(TriggerParam triggerParam, CancellationToken cancellationToken);
 }

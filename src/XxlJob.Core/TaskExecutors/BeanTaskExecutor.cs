@@ -23,7 +23,7 @@ public class BeanTaskExecutor : ITaskExecutor
 
     public string GlueType => Constants.GlueType.Bean;
 
-    public async Task<ReturnT> Execute(TriggerParam triggerParam)
+    public async Task<ReturnT> Execute(TriggerParam triggerParam, CancellationToken cancellationToken)
     {
         if (triggerParam.ExecutorHandler == null)
             return ReturnT.Failed($"job handler of job {triggerParam.JobId} is null.");
@@ -38,13 +38,20 @@ public class BeanTaskExecutor : ITaskExecutor
 
         try
         {
-            return await handler.Execute(new JobExecuteContext(_jobLogger, triggerParam.ExecutorParams)).ConfigureAwait(false);
+            return await handler.Execute(new JobExecuteContext(_jobLogger, triggerParam.ExecutorParams, cancellationToken)).ConfigureAwait(false);
         }
         finally
         {
             // ReSharper disable SuspiciousTypeConversion.Global
-            if (handler is IAsyncDisposable ad) await ad.DisposeAsync().ConfigureAwait(false);
-            else if (handler is IDisposable d) d.Dispose();
+            switch (handler)
+            {
+                case IAsyncDisposable ad:
+                    await ad.DisposeAsync().ConfigureAwait(false);
+                    break;
+                case IDisposable d:
+                    d.Dispose();
+                    break;
+            }
             // ReSharper restore SuspiciousTypeConversion.Global
         }
     }

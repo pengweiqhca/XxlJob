@@ -14,7 +14,6 @@ public class JobTaskQueue : IDisposable
     private readonly ConcurrentQueue<(TriggerParam, ActivityContext)> _taskQueue = new();
     private readonly ConcurrentDictionary<long, byte> _idInQueue = new();
     private CancellationTokenSource? _cancellationTokenSource;
-    private Task? _runTask;
 
     public JobTaskQueue(ITaskExecutor executor, IJobLogger jobLogger, ILogger<JobTaskQueue> logger)
     {
@@ -27,11 +26,7 @@ public class JobTaskQueue : IDisposable
 
     public event EventHandler<HandleCallbackParam>? CallBack;
 
-    public bool IsRunning()
-    {
-        return _cancellationTokenSource != null;
-    }
-
+    public bool IsRunning() => _cancellationTokenSource != null;
 
     /// <summary>
     /// 覆盖之前的队列
@@ -41,10 +36,12 @@ public class JobTaskQueue : IDisposable
     public ReturnT Replace(TriggerParam triggerParam)
     {
         Stop();
+
         while (!_taskQueue.IsEmpty)
         {
             _taskQueue.TryDequeue(out _);
         }
+
         _idInQueue.Clear();
 
         return Push(triggerParam);
@@ -65,49 +62,33 @@ public class JobTaskQueue : IDisposable
         return ReturnT.SUCCESS;
     }
 
-    public void Stop()
-    {
-        _cancellationTokenSource?.Cancel();
-        _cancellationTokenSource?.Dispose();
-        _cancellationTokenSource = null;
-
-        //wait for task completed
-        _runTask?.GetAwaiter().GetResult();
-    }
+    public void Stop() => _cancellationTokenSource?.Cancel();
 
     public void Dispose()
     {
         Stop();
+
         while (!_taskQueue.IsEmpty)
         {
             _taskQueue.TryDequeue(out _);
         }
+
         _idInQueue.Clear();
     }
 
     private void StartTask()
     {
-        if (_cancellationTokenSource != null)
-        {
-            return; //running
-        }
+        if (_cancellationTokenSource != null) return; //running
+
         _cancellationTokenSource = new CancellationTokenSource();
-        var ct = _cancellationTokenSource.Token;
 
         using var __ = ExecutionContext.SuppressFlow();
 
-        _runTask = Task.Run(async () =>
+        Task.Run(async () =>
         {
-
-            //ct.ThrowIfCancellationRequested();
-
-            while (!ct.IsCancellationRequested)
+            while (!_cancellationTokenSource.Token.IsCancellationRequested)
             {
-                if (_taskQueue.IsEmpty)
-                {
-                    //_logger.LogInformation("task queue is empty!");
-                    break;
-                }
+                if (_taskQueue.IsEmpty) break;
 
                 ReturnT? result = null;
                 TriggerParam? triggerParam = null;
@@ -143,7 +124,7 @@ public class JobTaskQueue : IDisposable
                         else
                             _jobLogger.Log("<br>----------- xxl-job job execute start -----------<br>----------- Param:{0}", triggerParam.ExecutorParams);
 
-                        result = await Executor.Execute(triggerParam).ConfigureAwait(false);
+                        result = await ExecuteTask(triggerParam, _cancellationTokenSource.Token).ConfigureAwait(false);
 
                         _jobLogger.Log("<br>----------- xxl-job job execute end(finish) -----------<br>----------- ReturnT:" + result.Code);
 
@@ -158,9 +139,17 @@ public class JobTaskQueue : IDisposable
                         _logger.LogWarning("Dequeue Task Failed");
                     }
                 }
+                catch (OperationCanceledException ex)
+                {
+                    result = ReturnT.Failed("Task is cancelled: " + ex.Message);
+
+                    _jobLogger.Log("<br>----------- JobThread Exception:" + ex.Message + "<br>----------- xxl-job job execute end(cancelled) -----------");
+
+                    activity?.RecordException(ex);
+                }
                 catch (Exception ex)
                 {
-                    result = ReturnT.Failed("Dequeue Task Failed:" + ex.Message);
+                    result = ReturnT.Failed("Execute Task Failed: " + ex.Message);
 
                     _jobLogger.Log("<br>----------- JobThread Exception:" + ex.Message + "<br>----------- xxl-job job execute end(error) -----------");
 
@@ -181,5 +170,23 @@ public class JobTaskQueue : IDisposable
             _cancellationTokenSource = null;
 
         }, _cancellationTokenSource.Token);
+    }
+
+    private async Task<ReturnT> ExecuteTask(TriggerParam triggerParam, CancellationToken cancellationToken)
+    {
+        var task = Executor.Execute(triggerParam, cancellationToken);
+
+        if (task.IsCompleted) return await task.ConfigureAwait(false);
+
+        var tcs = new TaskCompletionSource<object?>();
+#if NETFRAMEWORK
+        using (cancellationToken.Register(static state => ((TaskCompletionSource<object?>)state!).TrySetResult(null), tcs))
+#else
+        await using (cancellationToken.Register(static state => ((TaskCompletionSource<object?>)state!).TrySetResult(null), tcs).ConfigureAwait(false))
+#endif
+            if (await Task.WhenAny(task, tcs.Task).ConfigureAwait(false) != task)
+                throw new OperationCanceledException(cancellationToken);
+
+        return await task.ConfigureAwait(false);
     }
 }

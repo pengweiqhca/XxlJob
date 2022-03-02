@@ -13,7 +13,7 @@ public class DemoJobHandler : IJobHandler
     {
         context.JobLogger.Log("receive demo job handler,parameter:{0}", context.JobParameter);
         context.JobLogger.Log("开始休眠5秒");
-        await Task.Delay(5000).ConfigureAwait(false);
+        await Task.Delay(5000, context.CancellationToken).ConfigureAwait(false);
         context.JobLogger.Log("休眠10秒结束");
         return ReturnT.SUCCESS;
     }

@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using XxlJob.Core.Config;
@@ -69,9 +70,12 @@ public class XxlRestfulServiceHandler
             _logger.LogError(ex, "Handle command fail. " + ex.Message);
 
             ret = ReturnT.Failed("Executor internal error.");
+
+            ret.Content = ex.ToStringDemystified();
         }
 
-        await context.WriteResponse(ret ?? ReturnT.Failed($"method {context.Method}  is not impl"), cancellationToken).ConfigureAwait(false);
+        if (!cancellationToken.IsCancellationRequested)
+            await context.WriteResponse(ret ?? ReturnT.Failed($"method {context.Method}  is not impl"), cancellationToken).ConfigureAwait(false);
     }
 
     #region rpc service
