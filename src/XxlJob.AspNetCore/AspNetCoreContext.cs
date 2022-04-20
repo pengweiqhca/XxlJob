@@ -32,11 +32,11 @@ public class AspNetCoreContext : IXxlJobContext
         return false;
     }
 #if NET5_0_OR_GREATER
-        public Task<T?> ReadRequest<T>(CancellationToken cancellationToken) =>
-            _context.Request.ReadFromJsonAsync<T>(cancellationToken).AsTask();
+    public Task<T?> ReadRequest<T>(CancellationToken cancellationToken) =>
+        _context.Request.ReadFromJsonAsync<T>(cancellationToken).AsTask();
 
-        public ValueTask WriteResponse(ReturnT ret, CancellationToken cancellationToken) =>
-            new(_context.Response.WriteAsJsonAsync(ret, cancellationToken));
+    public ValueTask WriteResponse(ReturnT ret, CancellationToken cancellationToken) =>
+        new(_context.Response.WriteAsJsonAsync(ret, cancellationToken));
 #else
     public Task<T?> ReadRequest<T>(CancellationToken cancellationToken) =>
         JsonSerializer.DeserializeAsync<T>(_context.Request.Body, cancellationToken: cancellationToken).AsTask();

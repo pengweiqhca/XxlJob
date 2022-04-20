@@ -19,9 +19,8 @@ public static class HttpRouteCollectionExtensions
     }
 
     private static XxlRestfulServiceHandler GetXxlRestfulServiceHandler(HttpRequestMessage request) =>
-        request.GetDependencyScope().GetService(typeof(XxlRestfulServiceHandler)) is XxlRestfulServiceHandler handler
-            ? handler
-            : throw new InvalidOperationException("Can't get XxlRestfulServiceHandler instance from WebApi DependencyScope.");
+        request.GetDependencyScope().GetService(typeof(XxlRestfulServiceHandler)) as XxlRestfulServiceHandler ??
+        throw new InvalidOperationException("Can't get XxlRestfulServiceHandler instance from WebApi DependencyScope.");
 
     private class XxlJobHandler : HttpMessageHandler
     {
