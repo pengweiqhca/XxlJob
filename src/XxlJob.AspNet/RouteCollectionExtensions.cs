@@ -39,7 +39,7 @@ public static class RouteCollectionExtensions
         basePath = string.IsNullOrWhiteSpace(basePath) ? null : basePath!.Trim('/') + "/";
 
         endpoints.Add("XxlJob", new Route(basePath + "{method:xxlJob}", null,
-            new RouteValueDictionary { { "xxlJob", new XxlJobConstraint(requestServices) } },
+            new() { { "xxlJob", new XxlJobConstraint(requestServices) } },
             new XxlJobHandler(requestServices)));
 
         return endpoints;
