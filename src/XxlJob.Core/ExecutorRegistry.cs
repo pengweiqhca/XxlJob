@@ -43,6 +43,7 @@ public class ExecutorRegistry : IExecutorRegistry
 
         _logger.LogInformation($">>>>>>>> start registry {registryParam.RegistryKey}({registryParam.RegistryValue}) to admin <<<<<<<<");
 
+        var first = true;
         var errorTimes = 0;
 
         while (!cancellationToken.IsCancellationRequested)
@@ -51,13 +52,17 @@ public class ExecutorRegistry : IExecutorRegistry
             {
                 var ret = await _adminClient.Registry(registryParam).ConfigureAwait(false);
 
-                _logger.LogDebug("registry last result:{0}", ret?.Code);
+                if (first) _logger.LogInformation("registry result: {0}", ret?.Code);
+                else if (errorTimes > 0) _logger.LogInformation("registry after failed result: {0}", ret?.Code);
+                else _logger.LogDebug("registry last result:{0}", ret?.Code);
+
+                first = false;
 
                 errorTimes = 0;
 
                 await Task.Delay(Constants.RegistryInterval, cancellationToken).ConfigureAwait(false);
             }
-            catch (TaskCanceledException)
+            catch (OperationCanceledException)
             {
                 _logger.LogInformation(">>>>> Application Stopping....<<<<<");
             }
