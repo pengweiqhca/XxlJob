@@ -38,7 +38,7 @@ public class BeanTaskExecutor : ITaskExecutor
 
         try
         {
-            return await handler.Execute(new JobExecuteContext(_jobLogger, triggerParam.ExecutorParams, cancellationToken)).ConfigureAwait(false);
+            return await handler.Execute(new(_jobLogger, triggerParam.ExecutorParams, cancellationToken)).ConfigureAwait(false);
         }
         finally
         {

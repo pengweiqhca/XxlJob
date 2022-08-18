@@ -104,7 +104,7 @@ public class JobDispatcher
     /// <param name="jobId"></param>
     /// <returns></returns>
     public ReturnT IdleBeat(int jobId) => _runningQueue.ContainsKey(jobId)
-        ? new ReturnT(ReturnT.FailCode, "job thread is running or has trigger queue.")
+        ? new(ReturnT.FailCode, "job thread is running or has trigger queue.")
         : ReturnT.SUCCESS;
 
     private void TriggerCallback(object sender, HandleCallbackParam callbackParam) =>
@@ -118,7 +118,7 @@ public class JobDispatcher
         }
 
         //NewJobId
-        jobQueue = new JobTaskQueue(executor, _jobLogger, _jobQueueLogger);
+        jobQueue = new(executor, _jobLogger, _jobQueueLogger);
 
         jobQueue.CallBack += TriggerCallback;
 

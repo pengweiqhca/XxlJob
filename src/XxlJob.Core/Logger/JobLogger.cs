@@ -27,7 +27,7 @@ public class JobLogger : IJobLogger, IDisposable
         _logger = logger;
         _options = optionsAccessor.Value;
 
-        _timer = new Timer(CleanOldLogs, null, 30 * 60 * 1000, 24 * 60 * 60 * 1000);
+        _timer = new(CleanOldLogs, null, 30 * 60 * 1000, 24 * 60 * 60 * 1000);
     }
 
     public void SetLogFile(long logTime, long logId)
@@ -62,10 +62,10 @@ public class JobLogger : IJobLogger, IDisposable
         var filePath = MakeLogFileName(logTime, logId);
 
         if (string.IsNullOrEmpty(filePath))
-            return new LogResult(fromLine, 0, "readLog fail, logFile not found", true);
+            return new(fromLine, 0, "readLog fail, logFile not found", true);
 
         if (!File.Exists(filePath))
-            return new LogResult(fromLine, 0, "readLog fail, logFile not exists", true);
+            return new(fromLine, 0, "readLog fail, logFile not exists", true);
 
         // read file
         var logContentBuffer = new StringBuilder();
@@ -89,7 +89,7 @@ public class JobLogger : IJobLogger, IDisposable
         }
 
         // result
-        return new LogResult(fromLine, toLineNum, logContentBuffer.ToString(), false);
+        return new(fromLine, toLineNum, logContentBuffer.ToString(), false);
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]

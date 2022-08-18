@@ -31,7 +31,7 @@ public class CallbackTaskQueue : IDisposable
 
         _callbackInterval = optionsAccessor.Value.CallBackInterval;
 
-        _retryQueue = new RetryCallbackTaskQueue(optionsAccessor.Value.LogPath,
+        _retryQueue = new(optionsAccessor.Value.LogPath,
             Push,
             loggerFactory.CreateLogger<RetryCallbackTaskQueue>());
 

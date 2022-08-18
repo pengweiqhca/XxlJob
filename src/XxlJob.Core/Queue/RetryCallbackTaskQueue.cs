@@ -25,7 +25,7 @@ public class RetryCallbackTaskQueue : IDisposable
         var dir = Path.GetDirectoryName(backupPath);
         if (!Directory.Exists(dir))
         {
-            Directory.CreateDirectory(dir ?? throw new Exception("logs path is empty"));
+            Directory.CreateDirectory(dir ?? throw new("logs path is empty"));
         }
 
         StartQueue();
@@ -33,7 +33,7 @@ public class RetryCallbackTaskQueue : IDisposable
 
     private void StartQueue()
     {
-        _cancellation = new CancellationTokenSource();
+        _cancellation = new();
         var stopToken = _cancellation.Token;
 
         using var _ = ExecutionContext.SuppressFlow();

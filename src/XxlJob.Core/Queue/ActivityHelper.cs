@@ -28,7 +28,7 @@ internal static class ActivityHelper
 
         activity.SetStatus(ActivityStatusCode.Error, ex.Message);
 
-        activity.AddEvent(new ActivityEvent("exception", tags: tags));
+        activity.AddEvent(new("exception", tags: tags));
     }
 
     private static string ToInvariantString(Exception exception)

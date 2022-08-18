@@ -80,7 +80,7 @@ public class JobTaskQueue : IDisposable
     {
         if (_cancellationTokenSource != null) return; //running
 
-        _cancellationTokenSource = new CancellationTokenSource();
+        _cancellationTokenSource = new();
 
         using var __ = ExecutionContext.SuppressFlow();
 
@@ -162,7 +162,7 @@ public class JobTaskQueue : IDisposable
 
                 if (triggerParam != null)
                 {
-                    CallBack?.Invoke(this, new HandleCallbackParam(triggerParam, result ?? ReturnT.FAIL));
+                    CallBack?.Invoke(this, new(triggerParam, result ?? ReturnT.FAIL));
                 }
             }
 

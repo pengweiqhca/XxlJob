@@ -26,7 +26,7 @@ public class AdminClient
         _factory = factory;
         _logger = logger;
 
-        _addresses = new List<AddressEntry>();
+        _addresses = new();
 
         InitAddress();
     }

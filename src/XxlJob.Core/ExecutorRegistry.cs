@@ -24,7 +24,7 @@ public class ExecutorRegistry : IExecutorRegistry
         _options = optionsAccessor.Value;
         _logger = logger;
 
-        if (!_options.AutoRegistry) _tcs = new TaskCompletionSource<object?>();
+        if (!_options.AutoRegistry) _tcs = new();
     }
 
     public void BeginRegistry() => Interlocked.Exchange(ref _tcs, null)?.TrySetResult(null);

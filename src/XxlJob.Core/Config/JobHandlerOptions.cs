@@ -22,16 +22,16 @@ public class JobHandlerOptions
         if (!typeof(IJobHandler).IsAssignableFrom(jobType))
             throw new ArgumentException($"{jobType.FullName} not implement {typeof(IJobHandler).FullName}", nameof(jobType));
 
-        if (jobType.IsAbstract )
+        if (jobType.IsAbstract)
             throw new ArgumentException($"{jobType.FullName} should not abstract.", nameof(jobType));
 
         if (!jobType.IsClass)
             throw new ArgumentException($"{jobType.FullName} must be class.", nameof(jobType));
 
         if (_jobHandlers.ContainsKey(jobName))
-            throw new Exception($"Same IJobHandler' name: [{jobName}]");
+            throw new($"Same IJobHandler' name: [{jobName}]");
 
-        _jobHandlers.Add(jobName, new JobHandler(null, jobType));
+        _jobHandlers.Add(jobName, new(null, jobType));
     }
 
     public void AddJob(IJobHandler job)
@@ -39,9 +39,9 @@ public class JobHandlerOptions
         var jobName = job.GetType().GetCustomAttribute<JobHandlerAttribute>()?.Name ?? job.GetType().Name;
 
         if (_jobHandlers.ContainsKey(jobName))
-            throw new Exception($"Same IJobHandler' name: [{jobName}], are you register repeatedly?");
+            throw new($"Same IJobHandler' name: [{jobName}], are you register repeatedly?");
 
-        _jobHandlers.Add(jobName, new JobHandler(job, null));
+        _jobHandlers.Add(jobName, new(job, null));
     }
 
     public readonly struct JobHandler
