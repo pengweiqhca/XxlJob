@@ -1,5 +1,3 @@
-using XxlJob.Core.Internal;
-
 namespace XxlJob.Core.Config;
 
 public class XxlJobOptions
@@ -17,7 +15,7 @@ public class XxlJobOptions
     /// <summary>
     /// 自动注册时提交的地址，为空会自动获取内网地址
     /// </summary>
-    public string? IpAddress { get; set; } = IpUtility.GetLocalIntranetIp()?.MapToIPv4().ToString();
+    public string? IpAddress { get; set; }
 
     /// <summary>
     /// 绑定端口

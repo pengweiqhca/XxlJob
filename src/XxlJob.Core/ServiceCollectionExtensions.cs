@@ -16,17 +16,16 @@ public static class ServiceCollectionExtensions
         services.AddXxlJob(configuration.GetSection("xxlJob"));
 
     public static IXxlJobBuilder AddXxlJob(this IServiceCollection services, IConfigurationSection configuration) =>
-        services.Configure<XxlJobOptions>(configuration)
-            .AddSingleton<IValidateOptions<XxlJobOptions>, XxlJobValidateOptions>()
-            .AddXxlJobCore();
+        services.Configure<XxlJobOptions>(configuration).AddXxlJobCore();
 
     public static IXxlJobBuilder AddXxlJob(this IServiceCollection services, Action<XxlJobOptions> configAction) =>
-        services.Configure(configAction)
-            .AddSingleton<IValidateOptions<XxlJobOptions>, XxlJobValidateOptions>()
-            .AddXxlJobCore();
+        services.Configure(configAction).AddXxlJobCore();
 
     private static IXxlJobBuilder AddXxlJobCore(this IServiceCollection services)
     {
+        services.TryAddEnumerable(ServiceDescriptor.Transient<IPostConfigureOptions<XxlJobOptions>, XxlJobPostOptions>());
+        services.TryAddEnumerable(ServiceDescriptor.Transient<IValidateOptions<XxlJobOptions>, XxlJobValidateOptions>());
+
         //可在外部提前注册对应实现，并替换默认实现
         services.TryAddSingleton<IJobLogger, JobLogger>();
         services.TryAddSingleton<IJobHandlerFactory, DefaultJobHandlerFactory>();
