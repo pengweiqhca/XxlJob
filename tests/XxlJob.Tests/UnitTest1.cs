@@ -1,6 +1,6 @@
 using Xunit;
 
-namespace XxlJob.Core.Tests;
+namespace XxlJob.Tests;
 
 public class UnitTest1
 {
