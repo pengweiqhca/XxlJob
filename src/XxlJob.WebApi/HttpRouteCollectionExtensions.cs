@@ -12,7 +12,7 @@ public static class HttpRouteCollectionExtensions
     {
         basePath = string.IsNullOrWhiteSpace(basePath) ? null : basePath!.Trim('/') + "/";
 
-        routes.MapHttpRoute("XxlJob", basePath + "{method:xxlJob}", null,
+        routes.MapHttpRoute("XxlJob", basePath + "{action:xxlJob}", null,
            new { xxlJob = new XxlJobConstraint() }, new XxlJobHandler());
 
         return routes;
@@ -24,13 +24,29 @@ public static class HttpRouteCollectionExtensions
 
     private class XxlJobHandler : HttpMessageHandler
     {
+        public static string Key { get; } = Guid.NewGuid().ToString("N");
+
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
-            var response = request.CreateResponse();
+            HttpResponseMessage response;
+            if (request.Properties.TryGetValue(Key, out var p) && p is WebApiContext context)
+            {
+                response = context.Response;
 
-            var method = request.GetRouteData()?.Values.TryGetValue("method:xxlJob", out var value) == true ? value?.ToString() : null;
+                request.Properties.Remove(Key);
+            }
+            else
+            {
+                response = request.CreateResponse();
 
-            await GetXxlRestfulServiceHandler(request).HandlerAsync(new WebApiContext(response, method ?? ""), cancellationToken).ConfigureAwait(false);
+                context = new WebApiContext(response)
+                {
+                    Action = request.GetRouteData()?.Values.TryGetValue("action:xxlJob", out var value) == true ? value?.ToString() ?? string.Empty : string.Empty,
+                    HttpMethod = request.Method.Method
+                };
+            }
+
+            await GetXxlRestfulServiceHandler(request).HandlerAsync(context, cancellationToken).ConfigureAwait(false);
 
             return response;
         }
@@ -40,16 +56,24 @@ public static class HttpRouteCollectionExtensions
     {
         public bool Match(HttpRequestMessage request, IHttpRoute route, string? parameterName, IDictionary<string, object> values, HttpRouteDirection routeDirection)
         {
-            var contentType = request.Content?.Headers.ContentType.MediaType;
-
-            if (request.Method != HttpMethod.Post || string.IsNullOrEmpty(contentType) ||
-                !contentType!.ToLower().StartsWith("application/json")) return false;
-
             parameterName = ":" + parameterName;
-            parameterName = values.Keys.FirstOrDefault(key => key.EndsWith(parameterName));
-            if (parameterName == null) return false;
+            parameterName = values.Keys.FirstOrDefault(key => key.EndsWith(parameterName, StringComparison.Ordinal));
+            if (parameterName == null || values[parameterName] is not string action) return false;
 
-            return values[parameterName] is string method && GetXxlRestfulServiceHandler(request).SupportedMethod(method);
+            if (request.GetQueryNameValuePairs()
+                    .Where(static q => "debug".Equals(q.Key, StringComparison.OrdinalIgnoreCase))
+                    .Select(static q => q.Value).FirstOrDefault() is "1" or "true")
+                return true;
+
+            var context = new WebApiContext(request.CreateResponse())
+            {
+                Action = action,
+                HttpMethod = request.Method.Method
+            };
+
+            request.Properties[XxlJobHandler.Key] = context;
+
+            return GetXxlRestfulServiceHandler(request).IsSupportedRequest(context);
         }
     }
 }

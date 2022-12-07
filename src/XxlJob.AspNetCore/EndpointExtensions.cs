@@ -22,12 +22,20 @@ public static class EndpointExtensions
 
         basePath = string.IsNullOrWhiteSpace(basePath) ? null : basePath.Trim('/') + "/";
 
-        return endpoints.Map(basePath + "{method:xxlJob}",
-                context => context.RequestServices.GetRequiredService<XxlRestfulServiceHandler>()
-                    .HandlerAsync(new AspNetCoreContext(context,
-                            context.Request.RouteValues.TryGetValue("method", out var value) ? value?.ToString() : null),
-                        context.RequestAborted))
-            .WithDisplayName("XxlJob");
+        return endpoints.Map(basePath + "{action:xxlJob}", static httpContext =>
+        {
+            if (httpContext.Items.TryGetValue(typeof(AspNetCoreContext), out var v) && v is AspNetCoreContext context)
+                httpContext.Items.Remove(typeof(AspNetCoreContext));
+            else
+                context = new AspNetCoreContext(httpContext)
+                {
+                    Action = httpContext.Request.RouteValues.TryGetValue("action", out var value) ? value?.ToString() ?? string.Empty : string.Empty,
+                    HttpMethod = httpContext.Request.Method
+                };
+
+            return httpContext.RequestServices.GetRequiredService<XxlRestfulServiceHandler>()
+                .HandlerAsync(context, httpContext.RequestAborted);
+        }).WithDisplayName("XxlJob");
     }
 
     private class XxlJobConstraint : IRouteConstraint
@@ -38,15 +46,19 @@ public static class EndpointExtensions
 
         public bool Match(HttpContext? httpContext, IRouter? route, string routeKey, RouteValueDictionary values, RouteDirection routeDirection)
         {
-            if (httpContext == null) return false;
+            if (httpContext == null || !values.TryGetValue(routeKey, out var value) || value is not string action) return false;
 
-            var contentType = httpContext.Request.ContentType;
+            if (httpContext.Request.Query["debug"].FirstOrDefault() is "1" or "true") return true;
 
-            if (!"POST".Equals(httpContext.Request.Method, StringComparison.OrdinalIgnoreCase) ||
-                string.IsNullOrEmpty(contentType) ||
-                !contentType.ToLower().StartsWith("application/json")) return false;
+            var context = new AspNetCoreContext(httpContext)
+            {
+                Action = action,
+                HttpMethod = httpContext.Request.Method
+            };
 
-            return values.TryGetValue(routeKey, out var value) && value is string method && _handler.SupportedMethod(method);
+            httpContext.Items[typeof(AspNetCoreContext)] = context;
+
+            return _handler.IsSupportedRequest(context);
         }
     }
 }

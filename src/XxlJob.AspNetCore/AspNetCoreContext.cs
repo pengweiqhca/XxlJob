@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Http;
+using System.Net;
 using System.Text.Json;
 using XxlJob.Core;
 using XxlJob.Core.Model;
@@ -9,14 +10,11 @@ public class AspNetCoreContext : IXxlJobContext
 {
     private readonly HttpContext _context;
 
-    public AspNetCoreContext(HttpContext context, string? method)
-    {
-        _context = context;
+    public AspNetCoreContext(HttpContext context) => _context = context;
 
-        Method = method ?? "";
-    }
+    public required string HttpMethod { get; init; }
 
-    public string Method { get; }
+    public required string Action { get; init; }
 
     public bool TryGetHeader(string headerName, out IEnumerable<string> headerValues)
     {
@@ -32,18 +30,23 @@ public class AspNetCoreContext : IXxlJobContext
         return false;
     }
 #if NET5_0_OR_GREATER
-    public Task<T?> ReadRequest<T>(CancellationToken cancellationToken) =>
-        _context.Request.ReadFromJsonAsync<T>(cancellationToken).AsTask();
+    public ValueTask<T?> ReadRequest<T>(CancellationToken cancellationToken) =>
+        _context.Request.ReadFromJsonAsync<T>(cancellationToken);
 
-    public ValueTask WriteResponse(ReturnT ret, CancellationToken cancellationToken) =>
-        new(_context.Response.WriteAsJsonAsync(ret, cancellationToken));
+    public ValueTask WriteResponse(HttpStatusCode statusCode, ReturnT ret, CancellationToken cancellationToken)
+    {
+        _context.Response.StatusCode = (int)statusCode;
+
+        return new(_context.Response.WriteAsJsonAsync(ret, cancellationToken));
+    }
 #else
-    public Task<T?> ReadRequest<T>(CancellationToken cancellationToken) =>
-        JsonSerializer.DeserializeAsync<T>(_context.Request.Body, cancellationToken: cancellationToken).AsTask();
+    public ValueTask<T?> ReadRequest<T>(CancellationToken cancellationToken) =>
+        JsonSerializer.DeserializeAsync<T>(_context.Request.Body, cancellationToken: cancellationToken);
 
-    public ValueTask WriteResponse(ReturnT ret, CancellationToken cancellationToken)
+    public ValueTask WriteResponse(HttpStatusCode statusCode, ReturnT ret, CancellationToken cancellationToken)
     {
         _context.Response.ContentType = "application/json;charset=utf-8";
+        _context.Response.StatusCode = (int)statusCode;
 
         return new(JsonSerializer.SerializeAsync(_context.Response.Body, ret, cancellationToken: cancellationToken));
     }

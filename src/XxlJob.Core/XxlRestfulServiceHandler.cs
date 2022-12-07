@@ -1,6 +1,7 @@
-using System.Diagnostics;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using System.Diagnostics;
+using System.Net;
 using XxlJob.Core.Config;
 using XxlJob.Core.Logger;
 using XxlJob.Core.Model;
@@ -19,28 +20,88 @@ public class XxlRestfulServiceHandler
         IJobLogger jobLogger,
         ILogger<XxlRestfulServiceHandler> logger)
     {
-
         _jobDispatcher = jobDispatcher;
         _jobLogger = jobLogger;
         _logger = logger;
 
         _options = optionsAccessor.Value;
-        if (_options == null)
-        {
-            throw new ArgumentNullException(nameof(XxlJobOptions));
-        }
+
+        if (_options == null) throw new ArgumentNullException(nameof(XxlJobOptions));
     }
 
-    public bool SupportedMethod(string method)
+    public virtual bool IsSupportedRequest(IXxlJobContext context)
     {
-        if (string.IsNullOrEmpty(method)) return false;
+        if (!"POST".Equals(context.HttpMethod, StringComparison.OrdinalIgnoreCase)) return false;
 
-        return method.ToLower() is "beat" or "idleBeat" or "run" or "kill" or "log";
+        if (!context.TryGetHeader("Content-Type", out var values)) return false;
+
+        var contentType = values.FirstOrDefault();
+
+        if (string.IsNullOrEmpty(contentType) ||
+            !contentType.ToLower().StartsWith("application/json", StringComparison.Ordinal)) return false;
+
+        if (string.IsNullOrEmpty(context.Action)) return false;
+
+        return context.Action is "beat" or "idleBeat" or "run" or "kill" or "log";
+    }
+
+    protected virtual HttpStatusCode CheckRequest(IXxlJobContext context, out string? message)
+    {
+        message = null;
+
+        if (!"POST".Equals(context.HttpMethod, StringComparison.OrdinalIgnoreCase))
+        {
+            return HttpStatusCode.MethodNotAllowed;
+        }
+
+        if (!context.TryGetHeader("Content-Type", out var values))
+        {
+            message = "Missing 'Content-Type' header.";
+
+            return HttpStatusCode.BadRequest;
+        }
+
+        var contentType = values.FirstOrDefault();
+        if (string.IsNullOrEmpty(contentType))
+        {
+            message = "Invalid 'Content-Type' header.";
+
+            return HttpStatusCode.BadRequest;
+        }
+
+        if (!contentType.ToLower().StartsWith("application/json", StringComparison.Ordinal))
+        {
+            message = "Invalid 'Content-Type' header value (must start with 'application/json').";
+
+            return HttpStatusCode.UnsupportedMediaType;
+        }
+
+        if (string.IsNullOrEmpty(context.Action))
+        {
+            message = "Missing 'action'";
+
+            return HttpStatusCode.NotFound;
+        }
+
+        if (context.Action is "beat" or "idleBeat" or "run" or "kill" or "log") return HttpStatusCode.OK;
+
+        message = $"Unsupported action {context.Action}";
+
+        return HttpStatusCode.NotFound;
     }
 
     public async Task HandlerAsync(IXxlJobContext context, CancellationToken cancellationToken)
     {
         ReturnT? ret = null;
+
+        if (CheckRequest(context, out var message) is var statusCode && statusCode != HttpStatusCode.OK)
+        {
+            ret = new ReturnT((int)statusCode, message);
+
+            await context.WriteResponse(statusCode, ret, cancellationToken).ConfigureAwait(false);
+
+            return;
+        }
 
         if (!string.IsNullOrEmpty(_options.AccessToken) &&
             context.TryGetHeader("XXL-JOB-ACCESS-TOKEN", out var tokenValues) &&
@@ -48,14 +109,14 @@ public class XxlRestfulServiceHandler
         {
             ret = ReturnT.Failed("ACCESS-TOKEN Auth Fail");
 
-            await context.WriteResponse(ret, cancellationToken).ConfigureAwait(false);
+            await context.WriteResponse(HttpStatusCode.OK, ret, cancellationToken).ConfigureAwait(false);
 
             return;
         }
 
         try
         {
-            ret = context.Method switch
+            ret = context.Action switch
             {
                 "beat" => Beat(),
                 "idleBeat" => IdleBeat(await context.ReadRequest<IdleBeatRequest>(cancellationToken).ConfigureAwait(false)),
@@ -75,7 +136,7 @@ public class XxlRestfulServiceHandler
         }
 
         if (!cancellationToken.IsCancellationRequested)
-            await context.WriteResponse(ret ?? ReturnT.Failed($"method {context.Method}  is not impl"), cancellationToken).ConfigureAwait(false);
+            await context.WriteResponse(HttpStatusCode.OK, ret ?? ReturnT.Failed($"action {context.Action}  is not impl"), cancellationToken).ConfigureAwait(false);
     }
 
     #region rpc service

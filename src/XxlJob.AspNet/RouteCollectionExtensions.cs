@@ -38,18 +38,18 @@ public static class RouteCollectionExtensions
 
         basePath = string.IsNullOrWhiteSpace(basePath) ? null : basePath!.Trim('/') + "/";
 
-        endpoints.Add("XxlJob", new Route(basePath + "{method:xxlJob}", null,
+        endpoints.Add("XxlJob", new Route(basePath + "{action:xxlJob}", null,
             new() { { "xxlJob", new XxlJobConstraint(requestServices) } },
             new XxlJobHandler(requestServices)));
 
         return endpoints;
     }
 
-    private static XxlRestfulServiceHandler GetXxlRestfulServiceHandler(HttpContextBase httpContext, Func<HttpContextBase, IServiceProvider> requestServices)
+    private static TService GetRequiredService<TService>(HttpContextBase httpContext, Func<HttpContextBase, IServiceProvider> requestServices) where TService : notnull
     {
         var provider = requestServices(httpContext) ?? throw new InvalidOperationException("requestServices() should not return null.");
 
-        return provider.GetRequiredService<XxlRestfulServiceHandler>();
+        return provider.GetRequiredService<TService>();
     }
 
     private class XxlJobHandler : HttpTaskAsyncHandler, IRouteHandler
@@ -60,15 +60,21 @@ public static class RouteCollectionExtensions
 
         public IHttpHandler GetHttpHandler(RequestContext requestContext) => this;
 
-        public override async Task ProcessRequestAsync(HttpContext context)
+        public override async Task ProcessRequestAsync(HttpContext httpContext)
         {
-            var method = context.Request.RequestContext.RouteData.Values.TryGetValue("method:xxlJob", out var value) ? value?.ToString() : null;
+            using var cts = CancellationTokenSource.CreateLinkedTokenSource(httpContext.Request.TimedOutToken, httpContext.Response.ClientDisconnectedToken);
 
-            using var cts = CancellationTokenSource.CreateLinkedTokenSource(context.Request.TimedOutToken, context.Response.ClientDisconnectedToken);
+            if (httpContext.Items.Contains(typeof(AspNetContext)) && httpContext.Items[typeof(AspNetContext)] is AspNetContext context)
+                httpContext.Items.Remove(typeof(AspNetContext));
+            else
+                context = new AspNetContext(new HttpContextWrapper(httpContext))
+                {
+                    Action = httpContext.Request.RequestContext.RouteData.Values.TryGetValue("action:xxlJob", out var value) ? value?.ToString() ?? string.Empty : string.Empty,
+                    HttpMethod = httpContext.Request.HttpMethod
+                };
 
-            await GetXxlRestfulServiceHandler(context.Request.RequestContext.HttpContext, _requestServices)
-                .HandlerAsync(new AspNetContext(context, method ?? ""), cts.Token)
-                .ConfigureAwait(false);
+            await GetRequiredService<XxlRestfulServiceHandler>(httpContext.Request.RequestContext.HttpContext, _requestServices)
+                .HandlerAsync(context, cts.Token).ConfigureAwait(false);
         }
     }
 
@@ -82,17 +88,21 @@ public static class RouteCollectionExtensions
         {
             if (httpContext == null) return false;
 
-            var contentType = httpContext.Request.ContentType;
-
-            if (!"POST".Equals(httpContext.Request.HttpMethod, StringComparison.OrdinalIgnoreCase) ||
-                string.IsNullOrEmpty(contentType) ||
-                !contentType.ToLower().StartsWith("application/json")) return false;
-
             parameterName = ":" + parameterName;
-            parameterName = values.Keys.FirstOrDefault(key => key.EndsWith(parameterName));
-            if (parameterName == null) return false;
+            parameterName = values.Keys.FirstOrDefault(key => key.EndsWith(parameterName, StringComparison.Ordinal));
+            if (parameterName == null || values[parameterName] is not string method) return false;
 
-            return values[parameterName] is string method && GetXxlRestfulServiceHandler(httpContext, _requestServices).SupportedMethod(method);
+            if (httpContext.Request.QueryString["debug"] is "1" or "true") return true;
+
+            var context = new AspNetContext(httpContext)
+            {
+                Action = method,
+                HttpMethod = httpContext.Request.HttpMethod
+            };
+
+            httpContext.Items[typeof(AspNetContext)] = context;
+
+            return GetRequiredService<XxlRestfulServiceHandler>(httpContext, _requestServices).IsSupportedRequest(context);
         }
     }
 }

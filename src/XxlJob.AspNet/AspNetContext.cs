@@ -1,3 +1,4 @@
+using System.Net;
 using System.Text.Json;
 using System.Web;
 using XxlJob.Core;
@@ -7,16 +8,13 @@ namespace XxlJob.AspNet;
 
 public class AspNetContext : IXxlJobContext
 {
-    private readonly HttpContext _context;
+    private readonly HttpContextBase _context;
 
-    public AspNetContext(HttpContext context, string method)
-    {
-        _context = context;
+    public AspNetContext(HttpContextBase context) => _context = context;
 
-        Method = method;
-    }
+    public required string HttpMethod { get; init; }
 
-    public string Method { get; }
+    public required string Action { get; init; }
 
     public bool TryGetHeader(string headerName, out IEnumerable<string> headerValues)
     {
@@ -33,12 +31,13 @@ public class AspNetContext : IXxlJobContext
         return false;
     }
 
-    public Task<T?> ReadRequest<T>(CancellationToken cancellationToken) =>
-        JsonSerializer.DeserializeAsync<T>(_context.Request.InputStream, cancellationToken: cancellationToken).AsTask();
+    public ValueTask<T?> ReadRequest<T>(CancellationToken cancellationToken) =>
+        JsonSerializer.DeserializeAsync<T>(_context.Request.InputStream, cancellationToken: cancellationToken);
 
-    public ValueTask WriteResponse(ReturnT ret, CancellationToken cancellationToken)
+    public ValueTask WriteResponse(HttpStatusCode statusCode, ReturnT ret, CancellationToken cancellationToken)
     {
         _context.Response.ContentType = "application/json;charset=utf-8";
+        _context.Response.StatusCode = (int)statusCode;
 
         return new(JsonSerializer.SerializeAsync(_context.Response.OutputStream, ret, cancellationToken: cancellationToken));
     }

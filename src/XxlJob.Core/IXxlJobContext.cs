@@ -1,14 +1,17 @@
+using System.Net;
 using XxlJob.Core.Model;
 
 namespace XxlJob.Core;
 
 public interface IXxlJobContext
 {
-    string Method { get; }
+    string HttpMethod { get; }
+
+    string Action { get; }
 
     bool TryGetHeader(string headerName, out IEnumerable<string> headerValues);
 
-    Task<T?> ReadRequest<T>(CancellationToken cancellationToken);
+    ValueTask<T?> ReadRequest<T>(CancellationToken cancellationToken);
 
-    ValueTask WriteResponse(ReturnT ret, CancellationToken cancellationToken);
+    ValueTask WriteResponse(HttpStatusCode statusCode, ReturnT ret, CancellationToken cancellationToken);
 }

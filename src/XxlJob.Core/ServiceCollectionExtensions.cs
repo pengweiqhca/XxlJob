@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
 using XxlJob.Core.Config;
 using XxlJob.Core.Hosted;
+using XxlJob.Core.Internal;
 using XxlJob.Core.Logger;
 using XxlJob.Core.Queue;
 using XxlJob.Core.TaskExecutors;
@@ -31,7 +32,7 @@ public static class ServiceCollectionExtensions
         services.TryAddSingleton<IJobHandlerFactory, DefaultJobHandlerFactory>();
         services.TryAddSingleton<IExecutorRegistry, ExecutorRegistry>();
 
-        services.AddHttpClient();
+        services.AddHttpClient(Constants.AdminClientName).ConfigureHttpClient(static client => client.Timeout = Constants.RpcRequestExpireTimeSpan);
         services.TryAddSingleton<JobDispatcher>();
         services.TryAddSingleton<TaskExecutorFactory>();
         services.TryAddSingleton<XxlRestfulServiceHandler>();

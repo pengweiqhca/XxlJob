@@ -10,8 +10,8 @@ public static class HttpConfigurationExtensions
     {
         if (configuration == null) throw new ArgumentNullException(nameof(configuration));
 
-        var options = configuration.DependencyResolver.GetService(typeof(IOptions<XxlJobOptions>)) as IOptions<XxlJobOptions>
-                      ?? throw new InvalidOperationException("Can't get IOptions<XxlJobOptions> instance from WebApi DependencyScope.");
+        var options = configuration.DependencyResolver.GetService(typeof(IOptions<XxlJobOptions>)) as IOptions<XxlJobOptions> ??
+                      throw new InvalidOperationException("Can't get IOptions<XxlJobOptions> instance from WebApi DependencyScope.");
 
         configuration.Routes.MapXxlJob(options.Value.BasePath);
 

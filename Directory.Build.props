@@ -3,7 +3,7 @@
   <PropertyGroup>
     <AssemblyOriginatorKeyFile>..\..\Key.snk</AssemblyOriginatorKeyFile>
     <ImplicitUsings>enable</ImplicitUsings>
-    <LangVersion>10.0</LangVersion>
+    <LangVersion>11.0</LangVersion>
     <Nullable>enable</Nullable>
     <ProduceReferenceAssembly>false</ProduceReferenceAssembly>
     <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
@@ -13,6 +13,7 @@
 
   <ItemGroup>
     <PackageReference Include="ConfigureAwaitChecker.Analyzer" Version="5.*" PrivateAssets="All" />
+    <PackageReference Include="PolySharp" Version="1.*" PrivateAssets="All" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFrameworkIdentifier)' == '.NETFramework'">
